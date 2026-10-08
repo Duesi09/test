@@ -341,7 +341,7 @@
     while (Math.abs(tx - x) > 0.5) {
       if (await maybeDance()) { restart(); last = performance.now(); v = 0; }
       const now = await frame();
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       const dist = Math.abs(tx - x);
       const brake = stopAtEnd ? Math.sqrt(2 * accel * dist) : vmax;
@@ -617,7 +617,7 @@
     let v = 14 * 2 * SPEED * scale, last = performance.now();
     while (x > A.x - 75 * scale) {
       const now = await frame();
-      const dt = Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       v += g * dt * 0.75;                                  // most of the body is still on this side
       x -= v * dt;
