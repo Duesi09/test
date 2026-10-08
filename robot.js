@@ -1,45 +1,68 @@
-// Little robot that wanders, jumps between platforms and does cute stuff.
+// Little robot: drops onto the first word, hops word to word, cannonballs into the pool,
+// splashes around, then climbs back out and does it again. Click it for a dance.
 (() => {
   const bot = document.getElementById('bot');
-  if (!bot) return;
+  const pool = document.getElementById('pool');
+  if (!bot || !pool) return;
 
   const dir = bot.querySelector('.dir');
   const spin = bot.querySelector('.spin');
-  const bubble = bot.querySelector('.bubble');
   const eyes = bot.querySelector('.eyes');
-  const W = 62, H = 77, SPEED = 80;
+  const words = [...document.querySelectorAll('[data-word]')];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPEED = 85;
 
-  let x = 0, y = 0, facing = 1, plat = null, poked = false;
+  let W = 62, H = 77;
+  let x = 0, y = 0, facing = 1, plat = null, sink = 0, poked = false, dancing = false;
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const rand = (a, b) => a + Math.random() * (b - a);
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
   const frame = () => new Promise(requestAnimationFrame);
+  const ctx = document.createElement('canvas').getContext('2d');
 
-  // Every [data-platform] element's top edge is somewhere the robot can stand.
-  function platforms() {
-    return [...document.querySelectorAll('[data-platform]')].map(el => {
-      const r = el.getBoundingClientRect();
-      return { el, l: r.left + scrollX + W / 2, r: r.right + scrollX - W / 2, t: r.top + scrollY };
-    }).filter(p => p.r > p.l);
+  // Robot scales with the headline so it always fits between the lines.
+  function sizeBot() {
+    const fs = parseFloat(getComputedStyle(words[0]).fontSize);
+    W = clamp(fs * 0.55, 38, 90);
+    H = W * 1.24;
+    bot.style.width = `${W}px`;
+    bot.style.height = `${H}px`;
   }
-  const inView = p => p.t > scrollY + H + 20 && p.t < scrollY + innerHeight + 10;
+
+  // Where the robot stands: the top of the capital letters, or the water surface.
+  function surface(el) {
+    const r = el.getBoundingClientRect();
+    let top;
+    if (el === pool) {
+      top = el.querySelector('.water').getBoundingClientRect().top;
+    } else {
+      const cs = getComputedStyle(el);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const m = ctx.measureText('H');
+      const fs = parseFloat(cs.fontSize);
+      const asc = m.fontBoundingBoxAscent ?? fs * 0.9;
+      const desc = m.fontBoundingBoxDescent ?? fs * 0.25;
+      const cap = m.actualBoundingBoxAscent || fs * 0.72;
+      top = r.top + (r.height - (asc + desc)) / 2 + asc - cap;
+    }
+    const pad = el === pool ? W * 0.55 : W * 0.35;
+    let l = r.left + pad, rr = r.right - pad;
+    if (rr < l) l = rr = (r.left + r.right) / 2;
+    return { el, l: l + scrollX, r: rr + scrollX, t: top + scrollY };
+  }
 
   function render() {
     bot.style.transform = `translate(${x - W / 2}px, ${y - H}px)`;
     dir.style.transform = `scaleX(${facing})`;
   }
 
-  // Re-read the current platform (layout may have shifted after fonts load or a resize).
   function refresh() {
-    const ps = platforms();
-    plat = ps.find(p => plat && p.el === plat.el) || ps.find(p => p.el.hasAttribute('data-ground'));
-    y = plat.t;
+    sizeBot();
+    plat = surface(plat.el);
+    y = plat.t + sink;
     x = clamp(x, plat.l, plat.r);
     render();
-    return ps;
   }
 
   async function walkTo(tx) {
@@ -56,17 +79,22 @@
     bot.classList.remove('walking');
   }
 
-  async function jumpTo(target, tx, flip) {
+  async function jumpTo(el, tx, { flip = false, into = 0, crouch = true } = {}) {
+    const target = surface(el);
+    tx = tx ?? rand(target.l, target.r);
     facing = tx >= x ? 1 : -1;
     render();
-    bot.classList.add('crouch');
-    await sleep(220);
-    bot.classList.remove('crouch');
+    if (crouch) {
+      bot.classList.add('crouch');
+      await sleep(200);
+      bot.classList.remove('crouch');
+    }
+    bot.classList.remove('swim', 'happy');
     bot.classList.add('air');
 
-    const x0 = x, y0 = y, y1 = target.t;
-    const arc = Math.max(55, (y0 - y1) / 2 + 65);
-    const dur = Math.min(1100, 480 + Math.hypot(tx - x0, y1 - y0) * 0.9);
+    const x0 = x, y0 = y, y1 = target.t + into;
+    const arc = Math.max(H * 0.9, (y0 - y1) / 2 + H);
+    const dur = Math.min(1150, 460 + Math.hypot(tx - x0, y1 - y0) * 0.85);
     const start = performance.now();
     let t = 0;
     while (t < 1) {
@@ -78,85 +106,154 @@
     }
     spin.style.transform = '';
     plat = target;
+    sink = into;
     bot.classList.remove('air');
-    bot.classList.add('land');
-    await sleep(180);
-    bot.classList.remove('land');
-  }
-
-  async function say(text, ms = 1800) {
-    bubble.textContent = text;
-    bubble.classList.add('show');
-    await sleep(ms);
-    bubble.classList.remove('show');
-  }
-
-  async function pose(cls, ms) {
-    bot.classList.add(cls);
-    await sleep(ms);
-    bot.classList.remove(cls);
-  }
-
-  function hearts() {
-    for (let i = 0; i < 3; i++) {
-      const h = document.createElement('span');
-      h.className = 'heart';
-      h.textContent = '♥';
-      h.style.setProperty('--dx', `${rand(-24, 24)}px`);
-      h.style.animationDelay = `${i * 120}ms`;
-      bot.appendChild(h);
-      setTimeout(() => h.remove(), 1400);
+    if (el !== pool) {
+      el.animate(
+        [{ transform: 'translateY(0)' }, { transform: `translateY(${H * 0.08}px)` }, { transform: 'translateY(0)' }],
+        { duration: 360, easing: 'ease-out' }
+      );
+      bot.classList.add('land');
+      await sleep(170);
+      bot.classList.remove('land');
     }
   }
 
-  const tricks = [
-    async () => { bot.classList.add('wave'); await say(pick(['hi! 👋', 'hello!', 'hey there'])); bot.classList.remove('wave'); },
-    () => pose('dance', 2200),
-    async () => { await pose('look', 900); await pose('look2', 900); },
-    () => say(pick(['beep boop', 'almost ready!', 'building stuff…', 'check back soon', 'loading… 87%'])),
-    () => jumpTo(plat, x, true),
-    async () => { await pose('look', 500); await say('zzz…', 1400); },
-  ];
+  function splash() {
+    const wr = pool.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.left = `${x - scrollX - wr.left}px`;
+    pool.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 1000);
 
-  async function hop(ps) {
-    const options = ps.filter(p => p.el !== plat.el && inView(p) && Math.abs(p.t - y) < 520);
-    if (!options.length) return walkTo(rand(plat.l, plat.r));
-    const target = pick(options);
-    // Walk toward the closest point first, then jump at most ~260px sideways.
-    const near = clamp((target.l + target.r) / 2, plat.l, plat.r);
-    await walkTo(clamp(near + rand(-40, 40), plat.l, plat.r));
-    if (poked) return;
-    const lo = Math.max(target.l, x - 260), hi = Math.min(target.r, x + 260);
-    const tx = lo <= hi ? rand(lo, hi) : clamp(x, target.l, target.r);
-    await jumpTo(target, tx, Math.random() < 0.2);
+    const sx = x, sy = plat.t;
+    for (let i = 0; i < 16; i++) {
+      const d = document.createElement('span');
+      const size = rand(4, 10);
+      d.className = 'drop';
+      d.style.width = d.style.height = `${size}px`;
+      d.style.left = `${sx - size / 2 + rand(-W * 0.3, W * 0.3)}px`;
+      d.style.top = `${sy - size / 2}px`;
+      if (Math.random() < 0.4) d.style.background = '#ffffff';
+      document.body.appendChild(d);
+      const dx = rand(-1, 1) * W * 1.6, up = rand(0.8, 2.2) * H;
+      d.animate([
+        { transform: 'translate(0, 0)', easing: 'cubic-bezier(.2,.7,.4,1)' },
+        { transform: `translate(${dx * 0.5}px, ${-up}px)`, easing: 'cubic-bezier(.6,0,.8,.6)' },
+        { transform: `translate(${dx}px, 10px)`, opacity: 0 },
+      ], { duration: rand(650, 950), fill: 'forwards' }).finished.then(() => d.remove());
+    }
   }
 
-  async function loop() {
-    let ps = platforms();
-    // Start on the lowest platform that's visible, so it's on screen on phones too.
-    plat = ps.filter(inView).sort((a, b) => b.t - a.t)[0] || ps.find(p => p.el.hasAttribute('data-ground'));
-    x = rand(plat.l, plat.r);
-    refresh();
-    bot.style.opacity = 1;
+  // Bounce in place without leaving the current spot (works in the pool too).
+  async function hopInPlace(flip) {
+    const y0 = y, h = H * 0.9, start = performance.now();
+    let t = 0;
+    bot.classList.add('air');
+    while (t < 1) {
+      t = Math.min(1, (await frame() - start) / 650);
+      y = y0 - 4 * h * t * (1 - t);
+      if (flip) spin.style.transform = `rotate(${360 * t}deg)`;
+      render();
+    }
+    spin.style.transform = '';
+    bot.classList.remove('air');
+    y = y0;
+    render();
+  }
 
+  async function coolDance() {
+    dancing = true;
+    const wasSwimming = bot.classList.contains('swim');
+    bot.classList.remove('swim', 'walking');
+    bot.classList.add('cool');
+    await sleep(350);
+    bot.classList.add('dance');
+    for (let beat = 0; beat < 8; beat++) {
+      facing = -facing;
+      render();
+      await sleep(380);
+    }
+    bot.classList.remove('dance');
+    // Moonwalk: face one way, glide the other.
+    if (!wasSwimming) {
+      facing = x > (plat.l + plat.r) / 2 ? 1 : -1;
+      const tx = clamp(x - facing * W * 1.4, plat.l, plat.r);
+      bot.classList.add('walking');
+      while (Math.abs(tx - x) > 0.5) {
+        await frame();
+        x += clamp(tx - x, -1.1, 1.1);
+        render();
+      }
+      bot.classList.remove('walking');
+    }
+    await hopInPlace(true);
+    if (wasSwimming) splash();
+    await sleep(500);
+    bot.classList.remove('cool');
+    if (wasSwimming) bot.classList.add('swim', 'happy');
+    dancing = false;
+  }
+
+  async function checkPoke() {
+    if (!poked) return;
+    poked = false;
+    await coolDance();
+  }
+
+  async function wait(ms) {
+    const end = performance.now() + ms;
+    while (performance.now() < end) {
+      await sleep(80);
+      await checkPoke();
+    }
+  }
+
+  async function run() {
+    sizeBot();
+    plat = surface(words[0]);
+    x = rand(plat.l, plat.r);
+    y = plat.t;
+    render();
+    bot.style.opacity = 1;
     if (reduceMotion) return;
-    await sleep(600);
-    await tricks[0]();
+
+    // Drop in from above.
+    y = scrollY - H - 20;
+    render();
+    await sleep(900);
+    await jumpTo(words[0], x, { crouch: false });
 
     for (;;) {
-      ps = refresh();
-      if (poked) {
-        poked = false;
-        hearts();
-        say(pick(['hehe', 'that tickles!', ':)', 'boop!']), 1300);
-        await jumpTo(plat, x, true);
-      } else {
-        const r = Math.random();
-        if (r < 0.35) await walkTo(rand(plat.l, plat.r));
-        else if (r < 0.7) await hop(ps);
-        else await pick(tricks)();
+      for (let i = 0; i < words.length; i++) {
+        refresh();
+        await wait(rand(300, 700));
+        await walkTo(rand(plat.l, plat.r));
+        await checkPoke();
+        if (Math.random() < 0.3) {
+          bot.classList.add('look');
+          await wait(700);
+          bot.classList.remove('look');
+        }
+        if (i < words.length - 1) await jumpTo(words[i + 1], null, { flip: Math.random() < 0.3 });
       }
-      await sleep(rand(300, 1100));
+
+      // Cannonball!
+      refresh();
+      await walkTo(plat.r);
+      await checkPoke();
+      await jumpTo(pool, null, { flip: true, into: H * 0.42 });
+      splash();
+      bot.classList.add('swim', 'happy');
+      await wait(900);
+      splash();
+      await wait(2600);
+
+      // Climb out and start over.
+      refresh();
+      await jumpTo(words[0], null, { flip: true });
+      bot.classList.remove('happy');
     }
   }
 
@@ -178,9 +275,8 @@
     eyes.style.transform = `translate(${dx}px, ${dy}px)`;
   });
 
-  bot.addEventListener('click', () => { poked = true; });
-  addEventListener('resize', () => { if (!bot.classList.contains('air')) refresh(); });
+  bot.addEventListener('click', () => { if (!dancing && !reduceMotion) poked = true; });
+  addEventListener('resize', () => { if (plat && !bot.classList.contains('air')) refresh(); });
 
-  bot.style.opacity = 0;
-  (document.fonts ? document.fonts.ready : Promise.resolve()).then(loop);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => sleep(50)).then(run);
 })();
