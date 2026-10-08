@@ -6,11 +6,13 @@ A one-screen "COMING SOON" page with a little chibi robot that lives on the lett
 
 The robot drops in, waves, takes a few steps, backflips off the letters into a hidden pool,
 pops out next to the N, gets bonked by a portal gun, portals up to the ceiling, tumbles down,
-lands like a superhero, gets an idea, puts on a hard hat and teleport-builds wooden boards
-onto random letters. Then it does the Griddy on the spot, forever.
+lands like a superhero, gets an idea, puts on a hard hat, shoots one portal next to each board spot and
+teleport-builds wooden boards onto the letters (one of 10 layouts, picked at random per visit).
+Then it does a cute little dance on the spot, forever.
 
 - Click the robot to make it Floss, Dab or dance.
 - Hover it and it smiles at you.
+- Add `?layout=1` … `?layout=10` to the URL to see a specific board layout.
 - With "reduce motion" turned on, it just stands and breathes.
 
 ## Files

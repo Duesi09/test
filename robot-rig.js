@@ -839,8 +839,17 @@
       const [t0, p0] = pts[i], [t1, p1] = pts[i + 1];
       const prev = pts[i - 1] || pts[i], next = pts[i + 2] || pts[i + 1];
       const dt = t1 - t0;
-      const m0 = i > 0 ? (p1 - prev[1]) / (t1 - prev[0]) * dt : 0;
-      const m1 = i + 2 < pts.length ? (next[1] - p0) / (next[0] - t0) * dt : 0;
+      let m0 = i > 0 ? (p1 - prev[1]) / (t1 - prev[0]) * dt : 0;
+      let m1 = i + 2 < pts.length ? (next[1] - p0) / (next[0] - t0) * dt : 0;
+      // no overshoot: holds stay still, and the curve never swings back past a key
+      const d = p1 - p0;
+      if (d === 0) { m0 = 0; m1 = 0; }
+      else {
+        if (m0 * d < 0) m0 = 0;
+        if (m1 * d < 0) m1 = 0;
+        const lim = 3 * Math.abs(d);
+        m0 = clamp(m0, -lim, lim); m1 = clamp(m1, -lim, lim);
+      }
       const t = (f - t0) / dt, t2 = t * t, t3 = t2 * t;
       out[name] = (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (-2 * t3 + 3 * t2) * p1 + (t3 - t2) * m1;
     }
@@ -1412,6 +1421,64 @@
           Object.assign(k, { armF: -18 - 55 * up, elbF: -55, armB: 18 + 55 * (1 - up), elbB: 55 });
         }
         if (f % 8 === 3) k.fx.push({ type: 'dust', x: lead > 0 ? -18 : 18, t: 0.35, a: 0.45 });
+        return k;
+      },
+    },
+
+    // A happy chibi dance, on the spot: bouncy claps, arms-up sway, hands-on-cheeks wiggle
+    // with little kicks, then a twirl with arms out. Loops seamlessly.
+    CuteDance: {
+      frames: 64, fps: 16, loop: true,
+      pose(f) {
+        const OPEN = { armF: 18, elbF: 40, armB: -18, elbB: -40, reachF: 1, reachB: 1 };
+        const CLAP = { armF: 74, elbF: 56, armB: -74, elbB: -56, reachF: 1, reachB: 1 };
+        const UP = { armF: -122, elbF: -16, armB: 122, elbB: 16, reachF: 2.1, reachB: 2.1 };
+        const CHEEK = { armF: 150, elbF: 74, armB: -150, elbB: -74, reachF: 1, reachB: 1 };
+        const OUT = { armF: -92, elbF: 0, armB: 92, elbB: 0, reachF: 1.3, reachB: 1.3 };
+        const k = keys([
+          [0, OPEN], [2, CLAP], [4, OPEN], [6, CLAP], [8, OPEN], [10, CLAP], [12, OPEN], [14, CLAP],
+          [18, UP], [30, UP],
+          [34, CHEEK], [46, CHEEK],
+          [50, OUT], [60, OUT],
+          [63, OPEN],
+        ], f, 64);
+        const seg = Math.floor(f / 16);
+        const t = f / 64;
+        k.front = 1;
+        k.eyes = 'happy';
+        k.mouth = seg === 2 ? 'o' : 'grin';
+        if (seg === 0) {
+          const hop = Math.abs(Math.sin(Math.PI * f / 4));
+          k.y = -6 * hop; k.sy = 1 + 0.04 * hop - 0.04 * (1 - hop);
+          k.headRot = 7 * Math.sin(TAU * f / 8);
+          k.kneeF = k.kneeB = 10 * (1 - hop);
+        } else if (seg === 1) {
+          const sw = Math.sin(TAU * f / 8);
+          k.lean = 8 * sw; k.headRot = -6 * sw;
+          k.hipF = 6 * sw; k.hipB = 6 * sw;
+          k.y = -3 * Math.abs(Math.sin(Math.PI * f / 4));
+        } else if (seg === 2) {
+          const w = Math.sin(TAU * f / 4);
+          k.lean = 5 * w; k.headRot = 9 * Math.sin(TAU * f / 8);
+          const kick = Math.max(0, Math.sin(TAU * f / 8));
+          const kick2 = Math.max(0, -Math.sin(TAU * f / 8));
+          k.hipF = 24 * kick; k.kneeF = 40 * kick;
+          k.hipB = 24 * kick2; k.kneeB = 40 * kick2;
+          k.y = -4 * Math.abs(w);
+        } else {
+          const u = (f - 48) / 16;
+          const c = Math.cos(TAU * Math.min(1, u * 1.25));
+          k.spin = Math.sign(c || 1) * Math.max(0.55, Math.abs(c));
+          k.y = -10 * Math.sin(Math.PI * Math.min(1, u * 1.25));
+          k.headRot = 0;
+        }
+        k.phone = 2 * Math.sin(TAU * f / 8);
+        const notes = [];
+        for (let i = 0; i < 2; i++) {
+          const q = (t * 4 + i / 2) % 1;
+          notes.push({ type: 'notes', x: (i ? 64 : -80) + Math.sin(q * 6 + i) * 5, y: -160 - q * 60, a: Math.sin(Math.PI * q) });
+        }
+        k.fx = notes;
         return k;
       },
     },

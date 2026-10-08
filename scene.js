@@ -679,30 +679,51 @@
     return out;
   }
 
-  // Each visit gets its own construction job: 2 random letters in COMING and 2 in SOON,
-  // each covered by a board at a random steep angle across the middle of the letter.
+  // 10 hand-picked board layouts, one picked per visit. [word, letter index, angle].
+  // COMING = C O M I N G (0-5), SOON = S O O N (0-3). Each layout has at least 2 boards on
+  // COMING so the robot can walk to the first one and walk home from the last one.
+  const LAYOUTS = [
+    [['c', 1, -50], ['c', 4, 48], ['s', 0, -42], ['s', 2, 56]],
+    [['c', 0, 55], ['c', 3, -40], ['c', 5, -58], ['s', 1, 45]],
+    [['c', 2, -45], ['c', 5, 50], ['s', 0, 60], ['s', 3, -48]],
+    [['c', 0, 40], ['c', 4, -62], ['s', 1, -52], ['s', 3, 44]],
+    [['c', 0, -48], ['c', 4, -55], ['s', 2, 42]],
+    [['c', 3, 60], ['c', 5, -44], ['s', 0, -50], ['s', 1, 38]],
+    [['c', 0, 42], ['c', 2, 58], ['s', 3, -60]],
+    [['c', 1, -38], ['c', 5, 62], ['s', 0, 46], ['s', 2, -40]],
+    [['c', 2, 50], ['c', 4, -46], ['s', 1, -58], ['s', 2, 48]],
+    [['c', 0, -60], ['c', 3, 44], ['s', 3, 40]],
+  ];
+
+  // Order: first COMING board, then every SOON board, then the rest of COMING.
+  // Each board gets exactly one portal, right behind where the robot stands.
   function buildJobs() {
     const s = spots(), c = s.coming, o = s.soon;
-    const pick = (arr, n) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).slice(0, n).map(v => v[1]).sort((a, b) => a.cx - b.cx);
-    const board = (L, top, base) => {
-      const h = base - top;
-      const sign = Math.random() < 0.5 ? -1 : 1;
-      return { x: L.cx + rand(-0.08, 0.08) * h, y: top + rand(0.42, 0.58) * h, w: rand(1.05, 1.25) * h, rot: sign * rand(38, 64) };
+    const forced = parseInt(new URLSearchParams(location.search).get('layout'), 10);   // ?layout=1..10 to preview one
+    const layout = LAYOUTS[forced >= 1 && forced <= LAYOUTS.length ? forced - 1 : Math.floor(Math.random() * LAYOUTS.length)];
+    const lc = letterBoxes(word), ls = letterBoxes(soon);
+    const make = ([w, i, rot]) => {
+      const top = w === 'c';
+      const L = (top ? lc : ls)[Math.min(i, (top ? lc : ls).length - 1)];
+      const line = top ? c : o;
+      const h = line.base - line.top;
+      const plank = { x: L.cx + rand(-0.05, 0.05) * h, y: line.top + rand(0.45, 0.55) * h, w: rand(1.1, 1.22) * h, rot: rot + rand(-4, 4) };
+      let side, x;
+      if (top) {
+        side = L.cx < (c.l + c.r) / 2 ? 1 : -1;                  // stand on top, on the side towards the middle
+        x = clamp(L.cx + side * 0.55 * (L.r - L.l + 30 * scale), s.top.l, s.top.r);
+      } else {
+        side = L.cx < (o.l + o.r) / 2 ? -1 : 1;                  // stand on the baseline, outside the letter
+        x = clamp(L.cx + side * 0.6 * (L.r - L.l), 30 * scale, vw - 30 * scale);
+      }
+      const left = side > 0;
+      return { x, y: top ? c.top : o.base, left, el: top ? word : soon, top, plank,
+        portal: { x: x + (left ? 1 : -1) * 34 * scale, y: top ? c.top : o.base } };
     };
-    const jobs = [];
-    // COMING: stands on top of the word, right next to the letter
-    for (const L of pick(letterBoxes(word), 2)) {
-      const side = L.cx < (c.l + c.r) / 2 ? 1 : -1;               // stand on the side towards the middle
-      const x = clamp(L.cx + side * 0.55 * (L.r - L.l + 30 * scale), s.top.l, s.top.r);
-      jobs.push({ x, y: c.top, left: side > 0, plank: board(L, c.top, c.base) });
-    }
-    // SOON: stands on the baseline in front of the sign, beside the letter
-    for (const L of pick(letterBoxes(soon), 2)) {
-      const side = L.cx < (o.l + o.r) / 2 ? -1 : 1;
-      const x = clamp(L.cx + side * 0.6 * (L.r - L.l), 30 * scale, vw - 30 * scale);
-      jobs.push({ x, y: o.base, left: side > 0, plank: board(L, o.top, o.base) });
-    }
-    return jobs;
+    const all = layout.map(make);
+    const cs = all.filter(j => j.top).sort((a, b) => a.x - b.x);
+    const ss = all.filter(j => !j.top).sort((a, b) => a.x - b.x);
+    return [cs[0], ...ss, ...cs.slice(1)];
   }
 
   function aimAt(tx, ty) {
@@ -826,19 +847,18 @@
     play('Idle', { mod: p => Object.assign({}, p, { armF: 192, elbF: 0, eyes: 'bright', mouth: 'grin', front: 0.6, y: -4 }) });
     await sleep(450);
 
-    // Portal barrage: one portal for each job, plus one right next to it to jump into
+    // Portal barrage: exactly one portal per board, right next to it
     const jobs = buildJobs();
     const ph = 150 * scale, pw = ph * 0.34;
     const portals = [];
-    const portalAt = [];                                 // portal element per spot index
-    const entry = { x: x + 48 * scale, y: ground };
-    const spots2 = [entry, ...jobs.map(j => ({ x: j.x + (j.left ? 1 : -1) * 34 * scale, y: j.y }))];
-    for (let i = 0; i < spots2.length; i++) {
-      const sp = spots2[i];
+    const portalAt = [];
+    for (let i = 0; i < jobs.length; i++) {
+      const sp = jobs[i].portal;
+      const col = i % 2 ? 'orange' : 'cyan';
       const tip = aimAt(sp.x, sp.y - ph / 2);
       say(i % 2 ? 'exclaim' : 'sparkles', 0, 260);
-      fireAt(tip.x, tip.y, sp.x, sp.y - ph / 2, i % 2 ? 'orange' : 'cyan').then(() => {
-        const el = makePortal(sp.x, sp.y - ph / 2, pw, ph, i % 2 ? 'orange' : 'cyan');
+      fireAt(tip.x, tip.y, sp.x, sp.y - ph / 2, col).then(() => {
+        const el = makePortal(sp.x, sp.y - ph / 2, pw, ph, col);
         portals.push(el);
         portalAt[i] = el;
       });
@@ -854,52 +874,48 @@
     play('Idle', { mod: p => Object.assign({}, p, { armF: 150, elbF: -10, eyes: 'determined', mouth: 'grin' }) });
     await sleep(320);
 
-    // Speed-build: hop into the portal, pop out at each spot, slap a board on, bang bang bang, next!
-    face(false);
-    await walk(entry.x - 6 * scale, false, 3);
-    pulse(portalAt[0]);
-    await teleportOut();
-    let from = spots2[0];
-    for (let n = 0; n < jobs.length; n++) {
-      const j = jobs[n], to = spots2[n + 1];
-      streak({ x: from.x, y: from.y - ph / 2 }, { x: to.x, y: to.y - ph / 2 }, n % 2 ? '79, 216, 255' : '255, 154, 60');
-      pulse(portalAt[n + 1]);
-      from = to;
-      x = j.x + (j.left ? 1 : -1) * 34 * scale;
-      ground = j.y;
+    // Speed-build: run to the first board, bang bang, then dive into its portal and pop out of
+    // the next board's portal, and so on. The last board is on COMING, so it just walks home.
+    const build = async (j, n) => {
       face(j.left);
-      play('Idle');
-      blendFrom = null;
-      await teleportIn();
-      x = j.x;
       nailBoard(j.plank);
       play('Hammer', { rate: 2 });
       const hit = duration('Hammer', 2) * 6 / 12;
       for (let k = 0; k < 2; k++) {
         await sleep(hit);
         sparks(j.plank.x, j.plank.y);
-        (n < 2 ? word : soon).animate(
+        j.el.animate(
           [{ transform: 'translate(0, 0)' }, { transform: `translate(${j.left ? -1.5 : 1.5}px, 2.5px)` }, { transform: 'translate(0, 0)' }],
           { duration: 110, easing: 'ease-out', composite: 'add' });
         await sleep(duration('Hammer', 2) - hit);
       }
       play('Idle');
       await sleep(60);
+    };
+    await walk(jobs[0].x, false, 3);
+    for (let n = 0; n < jobs.length; n++) {
+      const j = jobs[n];
+      await build(j, n);
+      if (n === jobs.length - 1) break;
+      // into this board's portal...
       face(!j.left);
-      x = j.x + (j.left ? 1 : -1) * 34 * scale - (j.left ? 6 : -6) * scale;
-      pulse(portalAt[n + 1]);
+      x = j.portal.x - (j.left ? 6 : -6) * scale;
+      pulse(portalAt[n]);
       await teleportOut();
+      // ...and out of the next one
+      const nx = jobs[n + 1];
+      streak({ x: j.portal.x, y: j.portal.y - ph / 2 }, { x: nx.portal.x, y: nx.portal.y - ph / 2 }, n % 2 ? '79, 216, 255' : '255, 154, 60');
+      pulse(portalAt[n + 1]);
+      x = nx.portal.x;
+      ground = nx.y;
+      face(nx.left);
+      play('Idle');
+      blendFrom = null;
+      await teleportIn();
+      x = nx.x;
     }
-    streak({ x: from.x, y: from.y - ph / 2 }, { x: entry.x, y: entry.y - ph / 2 }, '255, 154, 60');
-    pulse(portalAt[0]);
 
-    // Back home through the first portal, proud happy jump
-    x = entry.x;
-    ground = entry.y;
-    face(true);
-    play('Idle');
-    blendFrom = null;
-    await teleportIn();
+    // Walk home, proud happy jump
     await walk(home, false, 2.5);
     portals.forEach(closePortal);
     face(false);
@@ -953,14 +969,14 @@
     await sleep(700);
     await story();
 
-    // All done: the Griddy, on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
-    // after which it goes straight back to the Griddy.
+    // All done: a cute dance on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
+    // after which it goes straight back to it.
     face(false);
-    play('Griddy');
+    play('CuteDance');
     canDance = true;
     for (;;) {
       await wait(500);
-      if (clip !== clips.Griddy && !dancing) play('Griddy');
+      if (clip !== clips.CuteDance && !dancing) play('CuteDance');
     }
   }
 
