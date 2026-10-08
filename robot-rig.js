@@ -50,6 +50,7 @@
     mirror: false,               // instant left/right swap (used by Dab)
     eq: 0,                       // phase of the little equaliser on the chest screen
     front: 0,                    // 0 = three-quarter view, 1 = facing the camera
+    reachF: 1, reachB: 1,        // cartoon arm stretch (1 = normal length)
     shadowW: 1,
   };
   const NUMERIC = Object.keys(BASE).filter(k => typeof BASE[k] === 'number');
@@ -193,11 +194,11 @@
     ctx.restore();
   }
 
-  function drawArm(ctx, sx, sy, ang, elb, back, gun) {
+  function drawArm(ctx, sx, sy, ang, elb, back, gun, reach = 1) {
     const a = rad(ang);
-    const ex = sx + UPPER * Math.sin(a), ey = sy + UPPER * Math.cos(a);
+    const ex = sx + UPPER * reach * Math.sin(a), ey = sy + UPPER * reach * Math.cos(a);
     const b = rad(ang + elb);
-    const hx = ex + FORE * Math.sin(b), hy = ey + FORE * Math.cos(b);
+    const hx = ex + FORE * reach * Math.sin(b), hy = ey + FORE * reach * Math.cos(b);
     const W = 23;
     seg(ctx, sx, sy, ex, ey, W + 2 + LW * 2, COL.out);
     seg(ctx, ex, ey, hx, hy, W + LW * 2, COL.out);
@@ -707,7 +708,7 @@
     ctx.translate(0, HIP_Y);
     ctx.rotate(rad(p.lean));
     ctx.translate(0, -HIP_Y);
-    if (p.front <= 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, true);
+    if (p.front <= 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, true, false, p.reachB);
     ctx.restore();
 
     ctx.save();
@@ -731,8 +732,8 @@
     ctx.translate(0, -NECK_Y);
     drawHead(ctx, p);
     ctx.restore();
-    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false);
-    drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5);
+    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false, false, p.reachB);
+    drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5, p.reachF);
     ctx.restore();
 
     ctx.restore();
@@ -1069,7 +1070,7 @@
         const w = Math.sin(TAU * 4 * p);
         const hop = Math.abs(Math.sin(TAU * 2 * p));
         return {
-          armB: 148 + 10 * w, elbB: 6 + 32 * w,     // waves beside the head, clear of the face
+          armB: 104 + 6 * w, elbB: 42 + 26 * w, reachB: 1.9,   // stretchy wave beside the head
           armF: -14, elbF: 14,
           headRot: 9 + 3 * w, headY: -1.5 * hop,
           y: -4 * hop, sy: 1 + 0.03 * (1 - hop),
