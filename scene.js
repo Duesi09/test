@@ -734,11 +734,14 @@
     b.style.setProperty('--rot', `${pl.rot}deg`);
     document.body.appendChild(b);
     boards.push(b);
+    // the board starts held up over its head, then gets slapped onto the letter
+    const hx = x - pl.x, hy = ground - 150 * scale - pl.y;
     b.animate([
-      { transform: `rotate(${pl.rot + 14}deg) scale(1.35)`, opacity: 0 },
-      { transform: `rotate(${pl.rot - 3}deg) scale(0.96)`, opacity: 1, offset: 0.7 },
+      { transform: `translate(${hx}px, ${hy}px) rotate(0deg) scale(0.7)`, opacity: 0 },
+      { transform: `translate(${hx}px, ${hy - 6}px) rotate(0deg) scale(0.75)`, opacity: 1, offset: 0.35 },
+      { transform: `rotate(${pl.rot - 4}deg) scale(1.04)`, opacity: 1, offset: 0.8, easing: 'ease-out' },
       { transform: `rotate(${pl.rot}deg) scale(1)`, opacity: 1 },
-    ], { duration: 220, easing: 'ease-out' });
+    ], { duration: 340, easing: 'ease-in' });
   }
 
   function sparks(px, py) {
