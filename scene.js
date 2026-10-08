@@ -153,6 +153,7 @@
 
   // Little idle fidgets so it never stands frozen: a head tilt, a tiny happy hop, a peek at you.
   function fidgets(pose, now) {
+    if (reduceMotion) return pose;                       // keep it calm for reduced-motion users
     const idle = clip === clips.Idle && canDance && !override && !blendFrom;
     if (!fidget && idle && now > nextFidget) {
       fidget = { type: ['tilt', 'hop', 'peek', 'stretch', 'hum', 'tilt', 'hop'][Math.floor(Math.random() * 7)], start: now };
