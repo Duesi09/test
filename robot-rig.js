@@ -51,6 +51,7 @@
     eq: 0,                       // phase of the little equaliser on the chest screen
     front: 0,                    // 0 = three-quarter view, 1 = facing the camera
     reachF: 1, reachB: 1,        // cartoon arm stretch (1 = normal length)
+    behindF: false, behindB: false, // front view: draw that arm behind the body
     shadowW: 1,
   };
   const NUMERIC = Object.keys(BASE).filter(k => typeof BASE[k] === 'number');
@@ -708,7 +709,8 @@
     ctx.translate(0, HIP_Y);
     ctx.rotate(rad(p.lean));
     ctx.translate(0, -HIP_Y);
-    if (p.front <= 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, true, false, p.reachB);
+    if (p.front <= 0.5 || p.behindB) drawArm(ctx, 36, -79, p.armB, p.elbB, p.front <= 0.5, false, p.reachB);
+    if (p.front > 0.5 && p.behindF) drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5, p.reachF);
     ctx.restore();
 
     ctx.save();
@@ -732,8 +734,8 @@
     ctx.translate(0, -NECK_Y);
     drawHead(ctx, p);
     ctx.restore();
-    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false, false, p.reachB);
-    drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5, p.reachF);
+    if (p.front > 0.5 && !p.behindB) drawArm(ctx, 36, -79, p.armB, p.elbB, false, false, p.reachB);
+    if (!(p.front > 0.5 && p.behindF)) drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5, p.reachF);
     ctx.restore();
 
     ctx.restore();
@@ -1096,6 +1098,7 @@
           headRot: -7 * s, headX: 2 * s,
           phone: 2 * s,
           eyes: 'happy', mouth: 'grin', front: 1,
+          behindB: s > 0.15, behindF: s < -0.15,    // the real floss: one arm in front, one behind
         };
       },
     },
