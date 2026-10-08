@@ -717,7 +717,6 @@
     eqPhase = p.eq;
     torsoFront = clamp(p.front, 0, 1);
     drawTorso(ctx);
-    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false);
     ctx.restore();
 
     drawLeg(ctx, -15, p.hipF, p.kneeF, p.footF, false);
@@ -732,6 +731,7 @@
     ctx.translate(0, -NECK_Y);
     drawHead(ctx, p);
     ctx.restore();
+    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false);
     drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5);
     ctx.restore();
 
@@ -1069,9 +1069,9 @@
         const w = Math.sin(TAU * 4 * p);
         const hop = Math.abs(Math.sin(TAU * 2 * p));
         return {
-          armF: -152 + 10 * w, elbF: -8 + 34 * w,
-          armB: 16, elbB: 20,
-          headRot: -9 + 3 * w, headY: -1.5 * hop,
+          armB: 148 + 10 * w, elbB: 6 + 32 * w,     // waves beside the head, clear of the face
+          armF: -14, elbF: 14,
+          headRot: 9 + 3 * w, headY: -1.5 * hop,
           y: -4 * hop, sy: 1 + 0.03 * (1 - hop),
           lean: -3,
           kneeF: 6 * (1 - hop), kneeB: 6 * (1 - hop),
