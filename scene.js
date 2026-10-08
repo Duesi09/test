@@ -890,6 +890,7 @@
 
   async function run() {
     resize();
+    lastBox = textBox();
     const s = spots();
     x = s.top.home;
     ground = s.top.y;
@@ -936,12 +937,25 @@
     document.body.style.cursor = hit(e.clientX, e.clientY) ? 'pointer' : '';
     eyes.mx = e.clientX; eyes.my = e.clientY; eyes.mt = performance.now();
   });
+  // Keep the robot glued to the same spot on the letters when the window changes size:
+  // map its position from the old text box to the new one.
+  let lastBox = null;
+  const textBox = () => {
+    const c = lineOf(word), o = lineOf(soon);
+    return { l: Math.min(c.l, o.l), r: Math.max(c.r, o.r), top: c.top, base: o.base };
+  };
   addEventListener('resize', () => {
+    const before = lastBox || textBox();
     resize();
+    const after = textBox();
+    lastBox = after;
+    const sx = (after.r - after.l) / Math.max(1, before.r - before.l);
+    const sy = (after.base - after.top) / Math.max(1, before.base - before.top);
+    x = after.l + (x - before.l) * sx;
+    ground = after.top + (ground - before.top) * sy;
     if (!override && !clipRect && !portal && !spinRot) {
       const s = spots().top;
-      ground = s.y;
-      x = clamp(x, s.l, s.r);
+      if (Math.abs(ground - s.y) < 40 * scale) { ground = s.y; x = clamp(x, s.l, s.r); }
     }
   });
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => sleep(60)).then(run);
