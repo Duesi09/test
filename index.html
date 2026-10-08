@@ -3,138 +3,182 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Duesify</title>
-  <meta name="description" content="Duesify is launching soon. Leave your email and we'll let you know when it's ready.">
-  <meta property="og:title" content="Duesify">
-  <meta property="og:description" content="Launching soon. Leave your email and we'll let you know when it's ready.">
+  <title>Duesify — Portfolio</title>
+  <meta name="description" content="Portfolio coming soon. Projects, work and more at duesify.com.">
+  <meta property="og:title" content="Duesify — Portfolio">
+  <meta property="og:description" content="Portfolio coming soon.">
   <meta property="og:url" content="https://www.duesify.com">
-  <meta name="theme-color" content="#2a1fd1">
+  <meta name="theme-color" content="#0c0c10">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #2a1fd1;
-      --paper: #f2eee6;
-      --soft: rgba(242, 238, 230, 0.68);
-      --line: rgba(242, 238, 230, 0.32);
+      --bg: #0c0c10;
+      --surface: #15151c;
+      --border: #26262f;
+      --text: #f4f4f6;
+      --muted: #8d8d99;
+      --accent: #7c6cff;
+      --accent-hover: #8f82ff;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       min-height: 100vh;
       min-height: 100svh;
-      background: var(--ink);
-      color: var(--paper);
-      font-family: "Instrument Sans", system-ui, sans-serif;
-      font-size: 17px;
-      line-height: 1.5;
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      padding: 28px clamp(16px, 4vw, 48px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Geist", system-ui, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
-    .mono {
-      font-family: "IBM Plex Mono", ui-monospace, monospace;
-      font-size: 12px;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
+    .wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
 
-    header, footer {
+    header .wrap {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      color: var(--soft);
+      height: 72px;
     }
-    header { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo-mark {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: grid; place-items: center;
+      font-size: 15px; font-weight: 600; color: #fff;
+    }
+    .status {
+      font-size: 13px;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status::before {
+      content: "";
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
 
-    main {
-      display: grid;
-      grid-template-columns: 1fr minmax(280px, 400px);
-      align-items: end;
-      gap: 48px;
-      padding: 64px 0 40px;
+    main { flex: 1; display: flex; align-items: center; }
+    .hero { max-width: 620px; padding: 64px 0 96px; }
+    .eyebrow {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 16px;
     }
     h1 {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-weight: 400;
-      font-size: clamp(5rem, 19vw, 17rem);
-      line-height: 0.82;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 600;
+      line-height: 1.08;
       letter-spacing: -0.035em;
-      margin-left: -0.04em;
-      padding-bottom: 0.2em;
     }
-    h1 em { font-style: italic; }
+    .lead {
+      margin-top: 20px;
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 48ch;
+    }
 
-    .side p { color: var(--soft); max-width: 34ch; }
-    .side p strong { color: var(--paper); font-weight: 500; }
-
-    form { margin-top: 28px; }
-    label { display: block; margin-bottom: 10px; color: var(--soft); }
-    .field {
+    form {
+      margin-top: 36px;
       display: flex;
-      border-bottom: 1px solid var(--paper);
+      gap: 10px;
+      max-width: 440px;
     }
     input[type="email"] {
       flex: 1;
       min-width: 0;
-      background: none;
-      border: 0;
-      outline: 0;
-      color: var(--paper);
+      height: 46px;
+      padding: 0 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
       font: inherit;
-      padding: 10px 0;
+      font-size: 15px;
+      transition: border-color 0.15s;
     }
-    input::placeholder { color: var(--line); }
+    input[type="email"]::placeholder { color: #5d5d68; }
+    input[type="email"]:focus { outline: none; border-color: var(--accent); }
     button {
-      background: none;
+      height: 46px;
+      padding: 0 20px;
       border: 0;
-      color: var(--paper);
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
       font: inherit;
+      font-size: 15px;
       font-weight: 500;
       cursor: pointer;
-      padding: 10px 0 10px 16px;
+      transition: background 0.15s;
     }
-    button:hover, button:focus-visible { text-decoration: underline; text-underline-offset: 4px; outline: 0; }
-    .field:focus-within { border-bottom-width: 2px; margin-bottom: -1px; }
+    button:hover { background: var(--accent-hover); }
+    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .hint { margin-top: 12px; font-size: 13px; color: #5d5d68; }
     .hidden { display: none; }
 
-    footer { padding-top: 18px; border-top: 1px solid var(--line); }
+    footer { border-top: 1px solid var(--border); }
+    footer .wrap {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      height: 64px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-    @media (max-width: 760px) {
-      main { grid-template-columns: 1fr; align-content: end; gap: 28px; padding-top: 48px; }
-      h1 { font-size: 30vw; }
+    @media (max-width: 520px) {
+      form { flex-direction: column; }
+      input[type="email"] { flex: none; }
+      button { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <header class="mono">
-    <span>Duesify</span>
-    <span>Coming soon</span>
+  <header>
+    <div class="wrap">
+      <a class="logo" href="/"><span class="logo-mark">d</span>duesify</a>
+      <span class="status">Coming soon</span>
+    </div>
   </header>
 
   <main>
-    <h1>dues<em>ify</em></h1>
+    <div class="wrap">
+      <section class="hero">
+        <p class="eyebrow">Portfolio</p>
+        <h1>My work is almost ready to share.</h1>
+        <p class="lead">I'm putting my projects together in one place. Leave your email and I'll let you know when the site is live.</p>
 
-    <div class="side">
-      <p><strong>We're not quite ready yet.</strong> The site is still being built. Leave your email and we'll write once, when it's live.</p>
-
-      <form name="notify" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
-        <input type="hidden" name="form-name" value="notify">
-        <p class="hidden"><label>Leave this empty <input name="bot-field"></label></p>
-        <label class="mono" for="email">Get notified</label>
-        <div class="field">
-          <input id="email" type="email" name="email" placeholder="name@email.com" required>
-          <button type="submit">Notify me &rarr;</button>
-        </div>
-      </form>
+        <form name="notify" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
+          <input type="hidden" name="form-name" value="notify">
+          <p class="hidden"><label>Leave this empty <input name="bot-field"></label></p>
+          <input type="email" name="email" placeholder="Your email" aria-label="Your email" required>
+          <button type="submit">Notify me</button>
+        </form>
+        <p class="hint">One email when it launches. Nothing else.</p>
+      </section>
     </div>
   </main>
 
-  <footer class="mono">
-    <span>&copy; <span id="year">2026</span> Duesify</span>
-    <span>www.duesify.com</span>
+  <footer>
+    <div class="wrap">
+      <span>&copy; <span id="year">2026</span> Duesify</span>
+      <span>duesify.com</span>
+    </div>
   </footer>
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
