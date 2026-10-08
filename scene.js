@@ -729,7 +729,7 @@
   function nailBoard(pl) {
     const b = document.createElement('div');
     b.className = 'plank';
-    const h = Math.max(12, pl.w * 0.17);
+    const h = Math.max(8, pl.w * 0.17);
     b.style.width = `${pl.w}px`;
     b.style.height = `${h}px`;
     b.style.left = `${pl.x - pl.w / 2}px`;
