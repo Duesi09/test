@@ -3,220 +3,139 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Duesify — Coming Soon</title>
-  <meta name="description" content="Duesify is launching soon. Get notified when we go live.">
-  <meta property="og:title" content="Duesify — Coming Soon">
-  <meta property="og:description" content="Something new is on the way. Get notified when we go live.">
+  <title>Duesify</title>
+  <meta name="description" content="Duesify is launching soon. Leave your email and we'll let you know when it's ready.">
+  <meta property="og:title" content="Duesify">
+  <meta property="og:description" content="Launching soon. Leave your email and we'll let you know when it's ready.">
   <meta property="og:url" content="https://www.duesify.com">
-  <meta name="theme-color" content="#0b0820">
+  <meta name="theme-color" content="#2a1fd1">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b0820;
-      --text: #ecebff;
-      --muted: #a6a3d6;
-      --blue: #4f7cff;
-      --violet: #8b5cf6;
-      --pink: #c084fc;
-      --glass: rgba(255, 255, 255, 0.06);
-      --border: rgba(255, 255, 255, 0.12);
+      --ink: #2a1fd1;
+      --paper: #f2eee6;
+      --soft: rgba(242, 238, 230, 0.68);
+      --line: rgba(242, 238, 230, 0.32);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
     body {
-      font-family: "Inter", system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
       min-height: 100vh;
+      min-height: 100svh;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      font-size: 17px;
+      line-height: 1.5;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 28px clamp(16px, 4vw, 48px);
+      -webkit-font-smoothing: antialiased;
+    }
+    .mono {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
-    /* Animated background blobs */
-    .bg { position: fixed; inset: 0; z-index: -2; overflow: hidden; }
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(90px);
-      opacity: 0.55;
-      animation: float 18s ease-in-out infinite;
+    header, footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--soft);
     }
-    .blob.b1 { width: 520px; height: 520px; background: var(--blue);   top: -140px; left: -120px; }
-    .blob.b2 { width: 460px; height: 460px; background: var(--violet); bottom: -160px; right: -100px; animation-delay: -6s; }
-    .blob.b3 { width: 320px; height: 320px; background: var(--pink);   top: 40%; left: 55%; opacity: 0.3; animation-delay: -12s; }
-    @keyframes float {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33%      { transform: translate(60px, -40px) scale(1.08); }
-      66%      { transform: translate(-40px, 50px) scale(0.95); }
-    }
-    .grid {
-      position: fixed; inset: 0; z-index: -1;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-      -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
-    }
-
-    header { padding: 28px 24px; display: flex; justify-content: center; }
-    .logo {
-      font-family: "Space Grotesk", sans-serif;
-      font-weight: 700;
-      font-size: 1.5rem;
-      letter-spacing: -0.02em;
-      display: flex; align-items: center; gap: 10px;
-      color: var(--text); text-decoration: none;
-    }
-    .logo-mark {
-      width: 34px; height: 34px; border-radius: 10px;
-      background: linear-gradient(135deg, var(--blue), var(--violet));
-      display: grid; place-items: center;
-      box-shadow: 0 8px 24px rgba(139, 92, 246, 0.45);
-    }
+    header { padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 
     main {
-      flex: 1;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center;
-      padding: 24px 16px 64px;
-    }
-    .badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 7px 14px;
-      border: 1px solid var(--border);
-      background: var(--glass);
-      backdrop-filter: blur(10px);
-      border-radius: 999px;
-      font-size: 0.85rem; color: var(--muted);
-      margin-bottom: 28px;
-      animation: rise 0.8s ease both;
-    }
-    .dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--violet);
-      box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.7);
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      70%  { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+      display: grid;
+      grid-template-columns: 1fr minmax(280px, 400px);
+      align-items: end;
+      gap: 48px;
+      padding: 64px 0 40px;
     }
     h1 {
-      font-family: "Space Grotesk", sans-serif;
-      font-size: clamp(2.6rem, 8vw, 5.5rem);
-      line-height: 1.02;
-      letter-spacing: -0.04em;
-      max-width: 14ch;
-      animation: rise 0.8s 0.1s ease both;
+      font-family: "Instrument Serif", Georgia, serif;
+      font-weight: 400;
+      font-size: clamp(5rem, 19vw, 17rem);
+      line-height: 0.82;
+      letter-spacing: -0.035em;
+      margin-left: -0.04em;
+      padding-bottom: 0.2em;
     }
-    .gradient {
-      background: linear-gradient(90deg, var(--blue), var(--violet), var(--pink), var(--blue));
-      background-size: 300% 100%;
-      -webkit-background-clip: text; background-clip: text;
-      color: transparent;
-      animation: shift 8s linear infinite;
-    }
-    @keyframes shift { to { background-position: 300% 0; } }
-    p.lead {
-      margin-top: 22px;
-      max-width: 36rem;
-      font-size: clamp(1rem, 2.4vw, 1.2rem);
-      line-height: 1.6;
-      color: var(--muted);
-      animation: rise 0.8s 0.2s ease both;
-    }
+    h1 em { font-style: italic; }
 
-    form {
-      margin-top: 40px;
-      width: 100%; max-width: 460px;
-      display: flex; gap: 8px;
-      padding: 6px;
-      border: 1px solid var(--border);
-      background: var(--glass);
-      backdrop-filter: blur(12px);
-      border-radius: 14px;
-      animation: rise 0.8s 0.3s ease both;
+    .side p { color: var(--soft); max-width: 34ch; }
+    .side p strong { color: var(--paper); font-weight: 500; }
+
+    form { margin-top: 28px; }
+    label { display: block; margin-bottom: 10px; color: var(--soft); }
+    .field {
+      display: flex;
+      border-bottom: 1px solid var(--paper);
     }
-    form:focus-within { border-color: rgba(139, 92, 246, 0.7); box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15); }
     input[type="email"] {
-      flex: 1; min-width: 0;
-      background: transparent; border: 0; outline: 0;
-      color: var(--text);
-      font: inherit; font-size: 1rem;
-      padding: 12px 14px;
+      flex: 1;
+      min-width: 0;
+      background: none;
+      border: 0;
+      outline: 0;
+      color: var(--paper);
+      font: inherit;
+      padding: 10px 0;
     }
-    input::placeholder { color: #7d79b5; }
+    input::placeholder { color: var(--line); }
     button {
-      border: 0; cursor: pointer;
-      font: inherit; font-weight: 600; font-size: 0.95rem;
-      color: #fff;
-      padding: 12px 20px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--blue), var(--violet));
-      box-shadow: 0 8px 24px rgba(79, 124, 255, 0.35);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      white-space: nowrap;
+      background: none;
+      border: 0;
+      color: var(--paper);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 10px 0 10px 16px;
     }
-    button:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(139, 92, 246, 0.5); }
+    button:hover, button:focus-visible { text-decoration: underline; text-underline-offset: 4px; outline: 0; }
+    .field:focus-within { border-bottom-width: 2px; margin-bottom: -1px; }
     .hidden { display: none; }
-    .note { margin-top: 14px; font-size: 0.85rem; color: #7d79b5; animation: rise 0.8s 0.4s ease both; }
 
-    footer {
-      padding: 24px 16px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: #6f6ba3;
-    }
+    footer { padding-top: 18px; border-top: 1px solid var(--line); }
 
-    @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-
-    @media (max-width: 480px) {
-      form { flex-direction: column; }
-      button { width: 100%; }
-      .blob.b1, .blob.b2 { width: 320px; height: 320px; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; transition: none !important; }
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; align-content: end; gap: 28px; padding-top: 48px; }
+      h1 { font-size: 30vw; }
     }
   </style>
 </head>
 <body>
-  <div class="bg" aria-hidden="true">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="blob b3"></div>
-  </div>
-  <div class="grid" aria-hidden="true"></div>
-
-  <header>
-    <a class="logo" href="/">
-      <span class="logo-mark">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h6a8 8 0 0 1 0 16H5z"/></svg>
-      </span>
-      duesify
-    </a>
+  <header class="mono">
+    <span>Duesify</span>
+    <span>Coming soon</span>
   </header>
 
   <main>
-    <span class="badge"><span class="dot"></span> Launching soon</span>
-    <h1>Something <span class="gradient">great</span> is on the way.</h1>
-    <p class="lead">We're putting the finishing touches on Duesify. Drop your email and you'll be the first to know when we go live.</p>
+    <h1>dues<em>ify</em></h1>
 
-    <form name="notify" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
-      <input type="hidden" name="form-name" value="notify">
-      <p class="hidden"><label>Don't fill this out: <input name="bot-field"></label></p>
-      <input type="email" name="email" placeholder="you@example.com" required aria-label="Email address">
-      <button type="submit">Notify me</button>
-    </form>
-    <p class="note">No spam. Just one email when we launch.</p>
+    <div class="side">
+      <p><strong>We're not quite ready yet.</strong> The site is still being built. Leave your email and we'll write once, when it's live.</p>
+
+      <form name="notify" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
+        <input type="hidden" name="form-name" value="notify">
+        <p class="hidden"><label>Leave this empty <input name="bot-field"></label></p>
+        <label class="mono" for="email">Get notified</label>
+        <div class="field">
+          <input id="email" type="email" name="email" placeholder="name@email.com" required>
+          <button type="submit">Notify me &rarr;</button>
+        </div>
+      </form>
+    </div>
   </main>
 
-  <footer>&copy; <span id="year">2026</span> Duesify. All rights reserved.</footer>
+  <footer class="mono">
+    <span>&copy; <span id="year">2026</span> Duesify</span>
+    <span>www.duesify.com</span>
+  </footer>
 
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
 </body>
