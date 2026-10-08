@@ -1432,7 +1432,7 @@
       pose(f) {
         const OPEN = { armF: 18, elbF: 40, armB: -18, elbB: -40, reachF: 1, reachB: 1 };
         const CLAP = { armF: 74, elbF: 56, armB: -74, elbB: -56, reachF: 1, reachB: 1 };
-        const UP = { armF: -122, elbF: -16, armB: 122, elbB: 16, reachF: 2.1, reachB: 2.1 };
+        const UP = { armF: -118, elbF: -18, armB: 118, elbB: 18, reachF: 2.2, reachB: 2.2 };
         const CHEEK = { armF: 150, elbF: 74, armB: -150, elbB: -74, reachF: 1, reachB: 1 };
         const OUT = { armF: -92, elbF: 0, armB: 92, elbB: 0, reachF: 1.3, reachB: 1.3 };
         const k = keys([
@@ -1457,6 +1457,7 @@
           k.lean = 8 * sw; k.headRot = -6 * sw;
           k.hipF = 6 * sw; k.hipB = 6 * sw;
           k.y = -3 * Math.abs(Math.sin(Math.PI * f / 4));
+          if (f < 32) { k.armF += 10 * sw; k.armB += 10 * sw; }      // arms sway with the body, like a happy wave
         } else if (seg === 2) {
           const w = Math.sin(TAU * f / 4);
           k.lean = 5 * w; k.headRot = 9 * Math.sin(TAU * f / 8);
