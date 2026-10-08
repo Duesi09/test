@@ -3,7 +3,7 @@
 // bonked by a portal gun, portals on the N and the ceiling, a tumbling fall,
 // a superhero landing and a happy jump. Clicking it makes it Floss or Dab.
 (() => {
-  const { clips, draw, blend, normalize } = RobotRig;
+  const { clips, draw, blend, normalize, emote } = RobotRig;
   const canvas = document.getElementById('bot');
   const word = document.getElementById('word');
   const soon = document.getElementById('soon');
@@ -27,6 +27,8 @@
   let x = 0, ground = 0, flip = false;   // feet position (page px)
   let turnStart = -1e9;                  // facing changes play a quick body turn instead of snapping
   const TURN_MS = 170;
+  const emotes = [];                    // {type, start, dur}: chibi speech-bubble reactions
+  let fidget = null, nextFidget = 0, dancing = false;
   const eyes = { look: 0, target: 0, nextLook: 0, nextBlink: 0, blinkAt: -1e9, mx: -1e4, my: -1e4, mt: -1e9 };
   let spinRot = 0;                       // extra whole-body rotation (deg) around the body centre
   let hasGun = false, happy = false;
@@ -50,6 +52,10 @@
     override = opts.mod || null;
   }
   const duration = (name, r = 1) => clips[name].frames / clips[name].fps / (r * SPEED) * 1000;
+
+  function say(type, delay = 0, dur = 1100) {
+    emotes.push({ type, start: performance.now() + delay, dur });
+  }
 
   function face(left) {
     if (left === flip) return;
@@ -80,7 +86,7 @@
       // Hidden pool: clear of every letter, level with the bottom line.
       pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 30 * scale), y: s.base },
       // Standing spot at the bottom, just right of the N in SOON.
-      bottom: { x: s.r + 58 * scale, y: s.base },
+      bottom: { x: s.r + 72 * scale, y: s.base },
       n: { x: s.r - 0.12 * (s.base - s.top), top: s.top, base: s.base },
     };
   }
@@ -109,6 +115,8 @@
     if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
     pose = followThrough(pose, now);
     pose = liveEyes(pose, now);
+    pose = fidgets(pose, now);
+    pose = Object.assign({}, pose, { eq: now / 1000 * (dancing ? 3 : 1) });
     if (blendFrom) {
       const t = (now - blendStart) / BLEND_MS;
       if (t >= 1) blendFrom = null;
@@ -136,6 +144,41 @@
       headY: (pose.headY || 0) + clamp(jig.y, -6, 8),
       phone: (pose.phone || 0) + clamp(jig.y * 0.8 + Math.abs(jig.x) * 0.15, -5, 6),
     });
+  }
+
+  // Little idle fidgets so it never stands frozen: a head tilt, a tiny happy hop, a peek at you.
+  function fidgets(pose, now) {
+    const idle = clip === clips.Idle && canDance && !override && !blendFrom;
+    if (!fidget && idle && now > nextFidget) {
+      fidget = { type: ['tilt', 'hop', 'peek', 'tilt', 'hop'][Math.floor(Math.random() * 5)], start: now };
+      nextFidget = now + rand(1800, 3600);
+    }
+    if (!idle) { fidget = null; nextFidget = Math.max(nextFidget, now + 900); return pose; }
+    if (!fidget) return pose;
+    const dur = { tilt: 1000, hop: 520, peek: 1200 }[fidget.type];
+    const t = (now - fidget.start) / dur;
+    if (t >= 1) { fidget = null; return pose; }
+    const k = Math.sin(Math.PI * t);
+    const p = Object.assign({}, pose);
+    if (fidget.type === 'tilt') {
+      p.headRot = (p.headRot || 0) - 14 * k;
+      p.armB = (p.armB || 0) + 25 * k;
+      if (k > 0.5) { p.eyes = 'happy'; p.mouth = 'smile'; }
+    } else if (fidget.type === 'hop') {
+      const air = Math.max(0, Math.sin(Math.PI * Math.min(1, t / 0.75)));
+      p.y = (p.y || 0) - 9 * air;
+      const squash = t < 0.18 ? Math.sin(Math.PI * t / 0.18) : t > 0.75 ? Math.sin(Math.PI * (t - 0.75) / 0.25) : 0;
+      p.sy = (p.sy || 1) * (1 - 0.1 * squash);
+      p.sx = (p.sx || 1) * (1 + 0.07 * squash);
+      p.armF = (p.armF || 0) - 30 * air; p.armB = (p.armB || 0) + 30 * air;
+      p.eyes = 'happy'; p.mouth = 'grin';
+    } else {
+      p.headRot = (p.headRot || 0) + 8 * k;
+      p.headY = (p.headY || 0) + 2 * k;
+      p.lean = (p.lean || 0) + 4 * k;
+      p.mouth = 'smile';
+    }
+    return p;
   }
 
   function liveEyes(pose, now) {
@@ -200,6 +243,12 @@
     } else {
       drawRobot(pose);
     }
+    for (let i = emotes.length - 1; i >= 0; i--) {
+      const e = emotes[i], t = (now - e.start) / e.dur;
+      if (t >= 1) { emotes.splice(i, 1); continue; }
+      if (t < 0 || portal) continue;
+      emote(ctx, e.type, x + (flip ? -1 : 1) * 30 * scale, ground - 230 * scale, scale * 1.4, t);
+    }
     requestAnimationFrame(render);
   }
 
@@ -214,7 +263,10 @@
     if (!canDance) return false;
     const prev = { clip, rate, override };
     play(Math.random() < 0.6 ? 'Floss' : 'Dab');
+    dancing = true;
+    say('sparkles', 100, 1200);
     await sleep(3600);
+    dancing = false;
     play(Object.keys(clips).find(k => clips[k] === prev.clip), { rate: prev.rate, mod: prev.override });
     return true;
   }
@@ -372,6 +424,7 @@
     s = spots();
     await walk(s.top.r, true);
     canDance = false;
+    say('sparkles', 0, 900);
     const pool = s.pool, x0 = x, y0 = ground;
     const gj = JUMP_G * scale;
     const bottomY = pool.y + 175 * scale;
@@ -417,7 +470,9 @@
     play('Idle');
     await sleep(250);
     play('Shake');
+    say('sweat', 120, 900);
     await sleep(duration('Shake'));
+    say('question', 200, 1200);
     play('Idle');
     canDance = true;
     await wait(500);
@@ -426,6 +481,8 @@
     canDance = false;
     face(false);
     play('FindGun');
+    say('exclaim', 120, 700);
+    say('sweat', 700, 900);
     await sleep(duration('FindGun'));
     hasGun = true;
     play('Idle');
@@ -457,6 +514,8 @@
     portal = { ax: A.x, ay: s.n.base - 0.5 * ph, bx: B.x, by: B.y };
     await walk(A.x, false, 1, false);
     play('Tumble');
+    say('exclaim', 0, 1000);
+    say('sweat', 900, 1000);
     leanTarget = 0;
     const g = GRAVITY * scale;
     let v = 14 * 2 * SPEED * scale, last = performance.now();
@@ -499,9 +558,13 @@
 
     // 8. Superhero landing, then a happy jump
     play('SuperheroLanding');
+    document.querySelector('h1').animate(
+      [{ transform: 'translate(0, 0)' }, { transform: 'translate(-3px, 4px)' }, { transform: 'translate(3px, -2px)' }, { transform: 'translate(-1px, 1px)' }, { transform: 'translate(0, 0)' }],
+      { duration: 260, easing: 'ease-out' });
     await sleep(duration('SuperheroLanding') * 0.8);
     face(false);
     happy = true;
+    say('sparkles', 150, 1300);
     play('Jump', { rate: 1.3 });
     await sleep(duration('Jump', 1.3));
     happy = false;
