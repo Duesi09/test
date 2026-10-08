@@ -709,6 +709,20 @@
     shrink = 1;
   }
 
+  // A bright streak between two portals: the robot zipping through portal-space.
+  function streak(a, b, color) {
+    const len = Math.hypot(b.x - a.x, b.y - a.y), ang = Math.atan2(b.y - a.y, b.x - a.x);
+    const el = document.createElement('div');
+    el.style.cssText = `position:absolute;left:${a.x}px;top:${a.y - 3}px;width:${len}px;height:6px;border-radius:3px;z-index:19;pointer-events:none;transform-origin:0 50%;transform:rotate(${ang}rad);background:linear-gradient(90deg, rgba(${color},0), rgba(${color},0.95), #fff);box-shadow:0 0 14px rgba(${color},0.9);`;
+    document.body.appendChild(el);
+    el.animate([{ opacity: 0, clipPath: 'inset(0 100% 0 0)' }, { opacity: 1, clipPath: 'inset(0 0 0 0)', offset: 0.45 }, { opacity: 0, clipPath: 'inset(0 0 0 100%)' }],
+      { duration: 260, easing: 'ease-out', fill: 'forwards' }).finished.then(() => el.remove());
+  }
+
+  function pulse(el) {
+    if (el) el.animate([{ filter: 'brightness(1)', scale: '1' }, { filter: 'brightness(2.2)', scale: '1.25' }, { filter: 'brightness(1)', scale: '1' }], { duration: 260, easing: 'ease-out' });
+  }
+
   function nailBoard(pl) {
     const b = document.createElement('div');
     b.className = 'plank';
@@ -778,6 +792,7 @@
     const jobs = buildJobs();
     const ph = 150 * scale, pw = ph * 0.34;
     const portals = [];
+    const portalAt = [];                                 // portal element per spot index
     const entry = { x: x + 48 * scale, y: ground };
     const spots2 = [entry, ...jobs.map(j => ({ x: j.x + (j.left ? 1 : -1) * 34 * scale, y: j.y }))];
     for (let i = 0; i < spots2.length; i++) {
@@ -785,7 +800,9 @@
       const tip = aimAt(sp.x, sp.y - ph / 2);
       say(i % 2 ? 'exclaim' : 'sparkles', 0, 260);
       fireAt(tip.x, tip.y, sp.x, sp.y - ph / 2, i % 2 ? 'orange' : 'cyan').then(() => {
-        portals.push(makePortal(sp.x, sp.y - ph / 2, pw, ph, i % 2 ? 'orange' : 'cyan'));
+        const el = makePortal(sp.x, sp.y - ph / 2, pw, ph, i % 2 ? 'orange' : 'cyan');
+        portals.push(el);
+        portalAt[i] = el;
       });
       await sleep(190);
     }
@@ -802,8 +819,14 @@
     // Speed-build: hop into the portal, pop out at each spot, slap a board on, bang bang bang, next!
     face(false);
     await walk(entry.x - 6 * scale, false, 3);
+    pulse(portalAt[0]);
     await teleportOut();
-    for (const j of jobs) {
+    let from = spots2[0];
+    for (let n = 0; n < jobs.length; n++) {
+      const j = jobs[n], to = spots2[n + 1];
+      streak({ x: from.x, y: from.y - ph / 2 }, { x: to.x, y: to.y - ph / 2 }, n % 2 ? '79, 216, 255' : '255, 154, 60');
+      pulse(portalAt[n + 1]);
+      from = to;
       x = j.x + (j.left ? 1 : -1) * 34 * scale;
       ground = j.y;
       face(j.left);
@@ -823,8 +846,11 @@
       await sleep(60);
       face(!j.left);
       x = j.x + (j.left ? 1 : -1) * 34 * scale - (j.left ? 6 : -6) * scale;
+      pulse(portalAt[n + 1]);
       await teleportOut();
     }
+    streak({ x: from.x, y: from.y - ph / 2 }, { x: entry.x, y: entry.y - ph / 2 }, '255, 154, 60');
+    pulse(portalAt[0]);
 
     // Back home through the first portal, proud happy jump
     x = entry.x;
