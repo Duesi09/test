@@ -607,7 +607,30 @@
     requestAnimationFrame(render);
     canvas.style.opacity = 1;
     if (reduceMotion) return;
-    await sleep(900);
+
+    // Entrance: drop in from above the screen onto "COMING" and land with a squishy bounce
+    const landY = s.top.y;
+    ground = -40;
+    play('Tumble');
+    say('exclaim', 0, 700);
+    await sleep(700);                                   // wait for the words to rise in
+    const g = GRAVITY * scale * 0.6, y0 = ground;
+    const T = Math.sqrt(2 * (landY - y0) / g);
+    play('Jump', { mod: (pose, f) => (f < 40 ? Object.assign({}, pose, { y: 0 }) : pose) });
+    clipStart = performance.now() - (34 / (16 * SPEED)) * 1000 + T * 1000 - (6 / (16 * SPEED)) * 1000;
+    const t0 = performance.now();
+    for (;;) {
+      const t = Math.min(T, (performance.now() - t0) / 1000);
+      ground = y0 + 0.5 * g * t * t;
+      if (t >= T) break;
+      await frame();
+    }
+    ground = landY;
+    override = null;
+    say('sparkles', 150, 1100);
+    await sleep(duration('Jump') * 8 / 48 + 200);
+    play('Idle');
+    await sleep(700);
     for (;;) {
       await story();
       const top = spots().top;
