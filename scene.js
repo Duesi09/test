@@ -347,13 +347,31 @@
     d.animate(keyframes, { duration: ms, fill: 'forwards' }).finished.then(() => d.remove());
   }
 
-  function splash(px, py, n = 16, power = 1) {
+  function ripple(px, py, delay = 0, size = 1) {
     const ring = document.createElement('span');
     ring.className = 'ripple';
     ring.style.left = `${px}px`;
     ring.style.top = `${py}px`;
+    ring.style.width = `${70 * size}px`;
+    ring.style.height = `${14 * size}px`;
+    ring.style.margin = `${-7 * size}px 0 0 ${-35 * size}px`;
+    ring.style.animationDelay = `${delay}ms`;
+    ring.style.opacity = delay ? 0 : 1;
+    ring.style.animationFillMode = 'both';
     document.body.appendChild(ring);
-    setTimeout(() => ring.remove(), 1000);
+    setTimeout(() => ring.remove(), 1000 + delay);
+  }
+
+  function splash(px, py, n = 16, power = 1) {
+    ripple(px, py);
+    if (n > 6) {
+      ripple(px, py, 260, 0.75);
+      // a few drops fall back in and make their own tiny rings
+      for (let i = 0; i < 3; i++) {
+        const dx = rand(-70, 70) * scale;
+        setTimeout(() => ripple(px + dx, py, 0, 0.35), rand(650, 950));
+      }
+    }
     for (let i = 0; i < n; i++) {
       const size = rand(4, 10) * Math.max(0.7, scale * 1.6);
       const dx = rand(-1, 1) * 110 * scale, up = rand(0.6, 1.4) * 190 * scale * power;
