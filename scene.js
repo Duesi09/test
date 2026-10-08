@@ -608,6 +608,7 @@
     portal = { ax: A.x, ay: s.n.base - 0.5 * ph, bx: B.x, by: B.y };
     await walk(A.x, false, 1, false);
     play('Tumble');
+    hasGun = false;                                      // gun stowed while it tumbles
     say('exclaim', 0, 1000);
     say('sweat', 900, 1000);
     leanTarget = 0;
@@ -789,7 +790,13 @@
     }
     hatDrop = 0;
     say('sparkles', 0, 800);
-    await sleep(350);
+    await sleep(300);
+
+    // ...and whips the portal gun back out, held up high
+    poof(x - 40 * scale, ground - 120 * scale);
+    hasGun = true;
+    play('Idle', { mod: p => Object.assign({}, p, { armF: 192, elbF: 0, eyes: 'bright', mouth: 'grin', front: 0.6, y: -4 }) });
+    await sleep(450);
 
     // Portal barrage: one portal for each job, plus one right next to it to jump into
     const jobs = buildJobs();
