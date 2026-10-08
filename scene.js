@@ -671,10 +671,11 @@
     const hc = c.base - c.top, ho = o.base - o.top;
     return [
       // where it stands, which way it faces, and the board it nails up
-      { x: c.l + 46 * scale, y: c.top, left: true, plank: { x: c.l + 0.12 * hc, y: c.top + 0.16 * hc, w: 1.2 * hc, rot: -24 } },
-      { x: c.r - 46 * scale, y: c.top, left: false, plank: { x: c.r - 0.14 * hc, y: c.top + 0.2 * hc, w: 1.2 * hc, rot: 22 } },
-      { x: Math.max(30 * scale, o.l - 48 * scale), y: o.base, left: false, plank: { x: o.l + 0.14 * ho, y: o.base - 0.3 * ho, w: 1.15 * ho, rot: 20 } },
-      { x: s.bottom.x - 50 * scale, y: o.base, left: true, plank: { x: o.r - 0.12 * ho, y: o.base - 0.36 * ho, w: 1.15 * ho, rot: -26 } },
+      // board positions measured from the hand-drawn layout: steep diagonals across C, G, S and N
+      { x: c.l + 0.95 * hc, y: c.top, left: true, plank: { x: c.l + 0.375 * hc, y: c.top + 0.42 * hc, w: 1.23 * hc, rot: -56 } },
+      { x: c.r - 1.0 * hc, y: c.top, left: false, plank: { x: c.r - 0.48 * hc, y: c.top + 0.56 * hc, w: 1.12 * hc, rot: 57 } },
+      { x: Math.max(30 * scale, o.l - 48 * scale), y: o.base, left: false, plank: { x: o.l + 0.32 * ho, y: o.top + 0.55 * ho, w: 1.18 * ho, rot: -60 } },
+      { x: s.bottom.x - 50 * scale, y: o.base, left: true, plank: { x: o.r - 0.46 * ho, y: o.top + 0.4 * ho, w: 1.18 * ho, rot: 53 } },
     ];
   }
 
@@ -728,7 +729,7 @@
   function nailBoard(pl) {
     const b = document.createElement('div');
     b.className = 'plank';
-    const h = Math.max(12, pl.w * 0.2);
+    const h = Math.max(12, pl.w * 0.17);
     b.style.width = `${pl.w}px`;
     b.style.height = `${h}px`;
     b.style.left = `${pl.x - pl.w / 2}px`;
@@ -931,11 +932,16 @@
     await sleep(duration('Jump') * 8 / 48 + 200);
     play('Idle');
     await sleep(700);
+    await story();
+
+    // All done: Gangnam Style, forever. Clicks still trigger a quick Floss/Dab/dance,
+    // after which it slides right back into the horse dance.
+    face(false);
+    play('Gangnam');
+    canDance = true;
     for (;;) {
-      await story();
-      const top = spots().top;
-      x = clamp(x, top.l, top.r);
-      ground = top.y;
+      await wait(500);
+      if (clip !== clips.Gangnam && !dancing) play('Gangnam');
     }
   }
 

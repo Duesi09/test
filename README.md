@@ -7,7 +7,7 @@ A one-screen "COMING SOON" page with a little chibi robot that lives on the lett
 The robot drops in, waves, takes a few steps, backflips off the letters into a hidden pool,
 pops out next to the N, gets bonked by a portal gun, portals up to the ceiling, tumbles down,
 lands like a superhero, gets an idea, puts on a hard hat and teleport-builds wooden boards
-onto the letters. Then the loop starts again.
+onto the letters. Then it dances Gangnam Style forever.
 
 - Click the robot to make it Floss, Dab or dance.
 - Hover it and it smiles at you.

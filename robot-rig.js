@@ -701,6 +701,20 @@
           }
           break;
         }
+        case 'lasso': {
+          // rope from the raised hand up to a spinning loop
+          const a = e.k * TAU, lx = e.x - 8 + Math.cos(a) * 6, ly = e.y - 52;
+          ctx.strokeStyle = '#c98a4b';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.quadraticCurveTo(e.x + 6, e.y - 26, lx, ly + 6); ctx.stroke();
+          ctx.lineWidth = 3.4;
+          ctx.beginPath(); ctx.ellipse(lx, ly, 30, 9, 0, 0, TAU); ctx.stroke();
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.4;
+          ctx.beginPath(); ctx.ellipse(lx, ly, 30, 9, 0, a, a + 1.4); ctx.stroke();
+          ctx.globalAlpha = 0.5; ctx.strokeStyle = COL.fx; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(lx, ly, 40, -0.6 + a, 0.6 + a); ctx.stroke();
+          break;
+        }
         case 'uplines': {
           ctx.lineWidth = 2.6;
           ctx.globalAlpha = (e.a ?? 1) * 0.85;
@@ -1324,6 +1338,42 @@
         k.kneeF = 12; k.kneeB = 12;
         k.eyes = f >= 4 && f < 8 ? 'squint' : 'determined';
         k.mouth = 'grin';
+        return k;
+      },
+    },
+
+    // Gangnam Style "horse riding" dance: wrists crossed like holding reins, bouncy
+    // side-step hops, and every other bar one hand twirls an invisible lasso overhead.
+    Gangnam: {
+      frames: 64, fps: 16, loop: true,
+      pose(f) {
+        const beat = (f % 8) / 8;                         // one hop per 8 frames
+        const hop = Math.pow(Math.sin(Math.PI * beat), 1.5);
+        const side = Math.floor(f / 8) % 2 ? -1 : 1;      // alternate the leading foot
+        const lasso = f >= 32;                            // second half: lasso twirl
+        const tw = TAU * (f % 16) / 16;
+        const k = {
+          front: 1,
+          y: -9 * hop,
+          sy: 1 + 0.06 * hop - 0.05 * (1 - hop),
+          sx: 1 - 0.03 * hop + 0.04 * (1 - hop),
+          x: 3 * side * Math.sin(Math.PI * beat),
+          hipF: side > 0 ? 18 * hop : -4, kneeF: side > 0 ? 36 * hop : 6,
+          hipB: side < 0 ? 18 * hop : -4, kneeB: side < 0 ? 36 * hop : 6,
+          footF: side > 0 ? 10 * hop : 0, footB: side < 0 ? 10 * hop : 0,
+          // reins: both forearms cross in front of the chest and bounce with the beat
+          armF: 62 + 8 * hop, elbF: 58,
+          armB: lasso ? 150 + 6 * Math.sin(tw) : -62 - 8 * hop,
+          elbB: lasso ? 30 + 12 * Math.cos(tw) : -58,
+          reachB: lasso ? 2.4 : 1,
+          headRot: 6 * Math.sin(TAU * f / 16), headY: 2 * hop,
+          lean: 3 * Math.sin(TAU * f / 16),
+          phone: 3 * hop,
+          eyes: lasso ? 'happy' : 'determined', mouth: 'grin',
+          fx: [],
+        };
+        if (f % 8 === 0) k.fx.push({ type: 'dust', x: 0, t: 0.3, a: 0.5 });
+        if (lasso) k.fx.push({ type: 'lasso', x: 46, y: -150 - 9 * hop, k: (f % 16) / 16 });
         return k;
       },
     },
