@@ -44,3 +44,16 @@ if (fq) {
   [0, 0.5, 1].forEach((f, i) => RobotRig.draw(ctx, Object.assign(RobotRig.clips.Idle.pose(0), { front: f }), { x: (i + 0.5) * CELL.w * sc, y: CELL.groundY * sc, scale: sc }));
 }
 </script>
+<script>
+// ?fidget=stretch|hum renders the fidget pose override at its peak
+</script>
+<script>
+// ?gear=1 shows the hard hat + hammer + bright eyes, plus the idea emote
+if (new URLSearchParams(location.search).get('gear')) {
+  const sc = 1.3, c = document.getElementById('c'); c.width = CELL.w * sc * 2; c.height = CELL.h * sc;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#f4f6fb'; ctx.fillRect(0, 0, c.width, c.height);
+  RobotRig.draw(ctx, Object.assign(RobotRig.clips.Idle.pose(0), { hat: 1, eyes: 'bright', gun: 1 }), { x: 0.5 * CELL.w * sc, y: CELL.groundY * sc, scale: sc });
+  RobotRig.emote(ctx, 'idea', 0.5 * CELL.w * sc, 50, sc, 0.5);
+  RobotRig.draw(ctx, Object.assign(RobotRig.clips.Hammer.pose(5), { hat: 1 }), { x: 1.5 * CELL.w * sc, y: CELL.groundY * sc, scale: sc });
+}
+</script>

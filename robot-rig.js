@@ -52,6 +52,8 @@
     front: 0,                    // 0 = three-quarter view, 1 = facing the camera
     reachF: 1, reachB: 1,        // cartoon arm stretch (1 = normal length)
     behindF: false, behindB: false, // front view: draw that arm behind the body
+    hat: 0, hatY: 0,             // construction hard hat (1 = on), hatY lifts it for the drop-in
+    hammer: 0,                   // > 0.5 = holding a hammer in the near hand
     shadowW: 1,
   };
   const NUMERIC = Object.keys(BASE).filter(k => typeof BASE[k] === 'number');
@@ -195,7 +197,22 @@
     ctx.restore();
   }
 
-  function drawArm(ctx, sx, sy, ang, elb, back, gun, reach = 1) {
+  // Hammer, drawn along +x with the grip at the origin.
+  function drawHammer(ctx) {
+    ctx.lineJoin = 'round';
+    rrect(ctx, -6, -4, 40, 8, 4);
+    ctx.lineWidth = LW * 2; ctx.strokeStyle = COL.out; ctx.stroke();
+    ctx.fillStyle = '#c98a4b'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(4, -1.5); ctx.lineTo(26, -1.5); ctx.stroke();
+    rrect(ctx, 30, -16, 14, 32, 4);
+    ctx.lineWidth = LW * 2; ctx.strokeStyle = COL.out; ctx.stroke();
+    ctx.fillStyle = '#8d9bc4'; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    rrect(ctx, 33, -13, 3, 26, 1.5); ctx.fill();
+  }
+
+  function drawArm(ctx, sx, sy, ang, elb, back, gun, reach = 1, hammer = false) {
     const a = rad(ang);
     const ex = sx + UPPER * reach * Math.sin(a), ey = sy + UPPER * reach * Math.cos(a);
     const b = rad(ang + elb);
@@ -209,11 +226,11 @@
     ctx.fill();
     seg(ctx, sx, sy, ex, ey, W + 2, back ? COL.navyBack : COL.navy);
     seg(ctx, ex, ey, hx, hy, W, back ? COL.bodyBack : COL.body);
-    if (gun) {
+    if (gun || hammer) {
       ctx.save();
       ctx.translate(hx, hy);
       ctx.rotate(Math.atan2(Math.cos(b), Math.sin(b)));
-      drawGun(ctx);
+      if (hammer) drawHammer(ctx); else drawGun(ctx);
       ctx.restore();
       ctx.beginPath();
       ctx.arc(hx, hy, 13 + LW / 2, 0, Math.PI * 2);
@@ -375,6 +392,15 @@
         ctx.closePath();
         ctx.fill();
         break;
+      case 'bright':
+        ctx.shadowBlur = 22;
+        oval(e1, 9.5, 12.5);
+        oval(e2, 9, 12.5);
+        ctx.shadowBlur = 0;
+        glint(e1, true); glint(e2, true);
+        ctx.fillStyle = '#ffffff';
+        for (const e of [e1, e2]) { ctx.beginPath(); ctx.arc(e.x - 3, e.y + 5, 2, 0, Math.PI * 2); ctx.fill(); }
+        break;
       case 'derp':
         oval({ x: e1.x - 1, y: e1.y + 1 }, 9.5, 12.5);
         oval({ x: e2.x + 1, y: e2.y - 4 }, 4.5, 5.5);
@@ -501,6 +527,32 @@
     ctx.fillStyle = '#8fa2e0';
     ctx.beginPath(); ctx.arc(-50 + nx, ey - 19, 2.2, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
+
+    if (p.hat > 0.02) {
+      ctx.save();
+      ctx.globalAlpha = clamp(p.hat, 0, 1);
+      ctx.translate(-4 * F, cy - 30 - p.hatY);
+      ctx.lineJoin = 'round';
+      // dome
+      ctx.beginPath();
+      ctx.moveTo(-50, 4);
+      ctx.bezierCurveTo(-50, -42, 50, -42, 50, 4);
+      ctx.closePath();
+      ctx.lineWidth = LW * 2; ctx.strokeStyle = COL.out; ctx.stroke();
+      ctx.fillStyle = '#ffc83d'; ctx.fill();
+      // ridge + shine
+      ctx.fillStyle = '#f3a91f';
+      rrect(ctx, -7, -30, 14, 34, 6); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.beginPath(); ctx.ellipse(-26, -16, 10, 5, -0.6, 0, Math.PI * 2); ctx.fill();
+      // brim
+      rrect(ctx, -64, 0, 132, 11, 5.5);
+      ctx.lineWidth = LW * 2; ctx.strokeStyle = COL.out; ctx.stroke();
+      ctx.fillStyle = '#ffc83d'; ctx.fill();
+      ctx.fillStyle = '#f3a91f';
+      rrect(ctx, -60, 6, 124, 4, 2); ctx.fill();
+      ctx.restore();
+    }
   }
 
   // ---------- Effects (drawn in ground space, not rotated with the body) ----------
@@ -737,7 +789,7 @@
     drawHead(ctx, p);
     ctx.restore();
     if (p.front > 0.5 && !p.behindB) drawArm(ctx, 36, -79, p.armB, p.elbB, false, false, p.reachB);
-    if (!(p.front > 0.5 && p.behindF)) drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5, p.reachF);
+    if (!(p.front > 0.5 && p.behindF)) drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5 && p.hammer <= 0.5, p.reachF, p.hammer > 0.5);
     ctx.restore();
 
     ctx.restore();
@@ -1257,6 +1309,24 @@
         return k;
       },
     },
+
+    Hammer: {
+      frames: 12, fps: 18, loop: true,
+      pose(f) {
+        const k = keys([
+          [0, { armF: 175, elbF: -20, lean: -4, headRot: -6, y: 0 }],
+          [5, { armF: 40, elbF: 30, lean: 12, headRot: 8, y: 1 }],
+          [7, { armF: 55, elbF: 20, lean: 10, headRot: 6, y: 0 }],
+          [11, { armF: 172, elbF: -18, lean: -3, headRot: -5, y: 0 }],
+        ], f, 12);
+        k.hammer = 1;
+        k.armB = 30; k.elbB = 40;
+        k.kneeF = 12; k.kneeB = 12;
+        k.eyes = f >= 4 && f < 8 ? 'squint' : 'determined';
+        k.mouth = 'grin';
+        return k;
+      },
+    },
   };
 
   // Blend two poses (numeric params interpolate, the rest switch halfway).
@@ -1304,6 +1374,35 @@
       ctx.stroke(); ctx.fill();
       ctx.fillStyle = '#ffffff';
       ctx.beginPath(); ctx.ellipse(-2.5, 3, 1.8, 3, 0.3, 0, Math.PI * 2); ctx.fill();
+    } else if (type === 'idea') {
+      // glowing light bulb with rays
+      ctx.save();
+      ctx.shadowColor = '#ffe27a'; ctx.shadowBlur = 18;
+      ctx.strokeStyle = '#ffe27a'; ctx.lineWidth = 3;
+      for (let i = 0; i < 7; i++) {
+        const a = -Math.PI / 2 + (i - 3) * 0.42, r0 = 22 + 3 * Math.sin(t * 20 + i), r1 = r0 + 9;
+        ctx.beginPath(); ctx.moveTo(Math.cos(a) * r0, -4 + Math.sin(a) * r0); ctx.lineTo(Math.cos(a) * r1, -4 + Math.sin(a) * r1); ctx.stroke();
+      }
+      ctx.restore();
+      ctx.strokeStyle = COL.out; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, -6, 14, Math.PI * 0.8, Math.PI * 2.2); ctx.lineTo(6, 12); ctx.lineTo(-6, 12); ctx.closePath();
+      ctx.fillStyle = '#ffe27a';
+      ctx.save(); ctx.shadowColor = '#ffe27a'; ctx.shadowBlur = 16; ctx.fill(); ctx.restore();
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.8)';
+      ctx.beginPath(); ctx.ellipse(-5, -11, 3, 5, -0.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#8d9bc4';
+      rrect(ctx, -7, 12, 14, 9, 3); ctx.fill(); ctx.stroke();
+    } else if (type === 'note') {
+      ctx.fillStyle = '#79d8ff';
+      ctx.strokeStyle = COL.out;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(-4, 8, 7, 5.5, -0.4, 0, Math.PI * 2); ctx.stroke(); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(14, 4, 7, 5.5, -0.4, 0, Math.PI * 2); ctx.stroke(); ctx.fill();
+      ctx.lineWidth = 3.2;
+      ctx.beginPath(); ctx.moveTo(2, 7); ctx.lineTo(2, -14); ctx.lineTo(20, -18); ctx.lineTo(20, 3); ctx.stroke();
+      ctx.strokeStyle = '#79d8ff'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(2, 7); ctx.lineTo(2, -14); ctx.lineTo(20, -18); ctx.lineTo(20, 3); ctx.stroke();
     } else if (type === 'sparkles') {
       ctx.fillStyle = '#ffe27a';
       for (const [dx, dy, r] of [[-22, -4, 9], [20, -12, 7], [4, 12, 5]]) {

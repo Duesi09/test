@@ -21,6 +21,7 @@ Each animation is exported as a separate transparent PNG sprite sheet and animat
 | Shoot     | 40 | 16 | 2.5 s | no (fires the portal gun forward, then up) |
 | Tumble    | 16 | 24 | 0.7 s | yes (falling out of control) |
 | SuperheroLanding | 40 | 16 | 2.5 s | no |
+| Hammer    | 12 | 18 | 0.7 s | yes (hammering, holds a hammer) |
 
 ## Files
 
@@ -45,7 +46,7 @@ Animator parameters:
 - `Speed` (float): 0 plays Idle, above 0.1 plays Walk, above 2 plays Run.
 - `Dance` (bool)
 - `Jump`, `Backflip` and `FallOver` (triggers). FallOver always continues into StandUp, then back to Idle.
-- `Wave`, `Floss`, `Dab` and `Tumble` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
+- `Wave`, `Floss`, `Dab`, `Tumble` and `Hammer` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
 
 The robot faces right. Use `SpriteRenderer.flipX` to make it face left.
 

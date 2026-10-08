@@ -89,6 +89,20 @@
     .portal.open { transform: scale(1); animation: wobble 1.2s ease-in-out infinite; }
     .portal.closing { transform: scale(0); transition-timing-function: ease-in; }
     @keyframes wobble { 50% { transform: scale(1.06, 0.97); } }
+    .plank {
+      position: absolute;
+      z-index: 18;
+      border: 2px solid #19204a;
+      border-radius: 5px;
+      background:
+        radial-gradient(circle at 9% 50%, #4b5374 0 2.2px, transparent 2.6px),
+        radial-gradient(circle at 91% 50%, #4b5374 0 2.2px, transparent 2.6px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 22px, rgba(90,52,20,0.25) 22px 24px),
+        linear-gradient(#e3a564, #c47f3e);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
+      transform: rotate(var(--rot));
+      pointer-events: none;
+    }
     .shot {
       position: absolute;
       width: 12px; height: 12px;

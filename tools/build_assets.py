@@ -10,7 +10,7 @@ from PIL import Image
 
 ORDER = ["Idle", "Walk", "Run", "Jump", "FallOver", "Dance", "Backflip", "StandUp",
          "Wave", "Floss", "Dab", "Cannonball", "Shake", "FindGun", "Shoot",
-         "Tumble", "SuperheroLanding"]
+         "Tumble", "SuperheroLanding", "Hammer"]
 COLS = 8
 
 

@@ -32,6 +32,8 @@
   const eyes = { hover: 0, look: 0, target: 0, nextLook: 0, nextBlink: 0, blinkAt: -1e9, mx: -1e4, my: -1e4, mt: -1e9 };
   let spinRot = 0;                       // extra whole-body rotation (deg) around the body centre
   let hasGun = false, happy = false;
+  let hatOn = 0, hatDrop = 0, hammerOn = false, shrink = 1;   // finale gear + teleport squeeze
+  const boards = [];
   let portal = null;                     // {ax, ay, bx, by}: entry plane x = ax, exit through the ceiling at (bx, by)
   let clipRect = null;                   // {maxY} hides everything below a line (the hidden pool)
   let canDance = false, clicked = false;
@@ -86,8 +88,9 @@
       // Hidden pool: clear of every letter, level with the bottom line.
       pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 48), y: s.base },
       // Standing spot at the bottom, just right of the N in SOON.
-      bottom: { x: s.r + 72 * scale, y: s.base },
+      bottom: { x: Math.min(s.r + 115 * scale, Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 48) - 40 * scale), y: s.base },
       n: { x: s.r - 0.12 * (s.base - s.top), top: s.top, base: s.base },
+      coming: c, soon: s,
     };
   }
 
@@ -110,6 +113,8 @@
     let pose = clip.pose(f);
     if (override) pose = override(pose, f);
     if (hasGun) pose = Object.assign({}, pose, { gun: 1 });
+    if (hammerOn) pose = Object.assign({}, pose, { hammer: 1, gun: 0 });
+    if (hatOn) pose = Object.assign({}, pose, { hat: hatOn, hatY: hatDrop });
     if (happy) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin', front: 1 });
     leanFx += (leanTarget - leanFx) * 0.15;
     if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
@@ -150,12 +155,13 @@
   function fidgets(pose, now) {
     const idle = clip === clips.Idle && canDance && !override && !blendFrom;
     if (!fidget && idle && now > nextFidget) {
-      fidget = { type: ['tilt', 'hop', 'peek', 'tilt', 'hop'][Math.floor(Math.random() * 5)], start: now };
+      fidget = { type: ['tilt', 'hop', 'peek', 'stretch', 'hum', 'tilt', 'hop'][Math.floor(Math.random() * 7)], start: now };
+      if (fidget.type === 'hum') say('note', 150, 1300);
       nextFidget = now + rand(1800, 3600);
     }
     if (!idle) { fidget = null; nextFidget = Math.max(nextFidget, now + 900); return pose; }
     if (!fidget) return pose;
-    const dur = { tilt: 1000, hop: 520, peek: 1200 }[fidget.type];
+    const dur = { tilt: 1000, hop: 520, peek: 1200, stretch: 1500, hum: 1500 }[fidget.type];
     const t = (now - fidget.start) / dur;
     if (t >= 1) { fidget = null; return pose; }
     const k = Math.sin(Math.PI * t);
@@ -173,6 +179,23 @@
       p.sx = (p.sx || 1) * (1 + 0.07 * squash);
       p.armF = (p.armF || 0) - 30 * air; p.armB = (p.armB || 0) + 30 * air;
       p.eyes = 'happy'; p.mouth = 'grin';
+    } else if (fidget.type === 'stretch') {
+      // reach up high with a big yawn, a little wobble at the top
+      const up = Math.min(1, k * 1.4);
+      p.armF = -18 + (-150) * up; p.elbF = 0;
+      p.armB = 12 + 150 * up; p.elbB = 0;
+      p.y = (p.y || 0) - 3 * up;
+      p.sy = (p.sy || 1) * (1 + 0.05 * up);
+      p.headRot = (p.headRot || 0) - 6 * up + Math.sin(t * 20) * 1.5 * up;
+      p.front = 0.8 * up;
+      if (up > 0.6) { p.eyes = 'squint'; p.mouth = 'o'; }
+    } else if (fidget.type === 'hum') {
+      const sway = Math.sin(t * Math.PI * 4);
+      p.lean = (p.lean || 0) + 5 * sway * k;
+      p.headRot = (p.headRot || 0) - 7 * sway * k;
+      p.armF = (p.armF || 0) - 10 * sway * k; p.armB = (p.armB || 0) - 10 * sway * k;
+      p.front = 0.6 * k;
+      p.eyes = 'happy'; p.mouth = 'smile';
     } else {
       p.headRot = (p.headRot || 0) + 8 * k;
       p.headY = (p.headY || 0) + 2 * k;
@@ -215,9 +238,10 @@
   function drawRobot(pose) {
     ctx.save();
     ctx.translate(x, ground);
-    if (spinRot) {
+    if (spinRot || shrink < 1) {
       ctx.translate(0, -CENTER * scale);
-      ctx.rotate(spinRot * Math.PI / 180);
+      ctx.rotate((spinRot + (1 - shrink) * 300) * Math.PI / 180);
+      ctx.scale(shrink, shrink);
       ctx.translate(0, CENTER * scale);
     }
     const tt = (performance.now() - turnStart) / TURN_MS;
@@ -478,16 +502,16 @@
     let s = spots();
     const home = s.top.home;
     canDance = true;
-    play('Idle');
-    await wait(1600);
 
-    // 1. Three goofy steps to the right, then wave at the camera
-    await walk(Math.min(s.top.r, x + 62 * scale), false);
+    // 1. Wave at the camera straight away (last loop's construction comes down), then three goofy steps
+    clearBuild();
     face(false);
     play('Wave');
     await wait(2600);
     play('Idle');
-    await wait(400);
+    await wait(250);
+    await walk(Math.min(s.top.r, x + 62 * scale), false);
+    await wait(300);
 
     // 2. Run to the edge and backflip off the letters into the hidden pool.
     //    A real gravity arc whose peak is already past the last letter, so it never touches one.
@@ -626,25 +650,202 @@
     spinRot = 0;
     closePortal(pB);
 
-    // 8. Superhero landing, then a happy jump
+    // 8. Superhero landing
     play('SuperheroLanding');
     document.querySelector('h1').animate(
       [{ transform: 'translate(0, 0)' }, { transform: 'translate(-3px, 4px)' }, { transform: 'translate(3px, -2px)' }, { transform: 'translate(-1px, 1px)' }, { transform: 'translate(0, 0)' }],
       { duration: 260, easing: 'ease-out' });
     await sleep(duration('SuperheroLanding') * 0.8);
     face(false);
+
+    await finale(home);
+    canDance = true;
+    await wait(1400);
+  }
+
+  // ---------- Finale: idea, hard hat, portal barrage, teleporting speed-build ----------
+  function buildJobs() {
+    const s = spots(), c = s.coming, o = s.soon;
+    const hc = c.base - c.top, ho = o.base - o.top;
+    return [
+      // where it stands, which way it faces, and the board it nails up
+      { x: c.l + 46 * scale, y: c.top, left: true, plank: { x: c.l + 0.12 * hc, y: c.top + 0.16 * hc, w: 1.2 * hc, rot: -24 } },
+      { x: c.r - 46 * scale, y: c.top, left: false, plank: { x: c.r - 0.14 * hc, y: c.top + 0.2 * hc, w: 1.2 * hc, rot: 22 } },
+      { x: Math.max(30 * scale, o.l - 48 * scale), y: o.base, left: false, plank: { x: o.l + 0.14 * ho, y: o.base - 0.3 * ho, w: 1.15 * ho, rot: 20 } },
+      { x: s.bottom.x - 50 * scale, y: o.base, left: true, plank: { x: o.r - 0.12 * ho, y: o.base - 0.36 * ho, w: 1.15 * ho, rot: -26 } },
+    ];
+  }
+
+  function aimAt(tx, ty) {
+    const dx = tx - x;
+    face(dx < 0);
+    const dir = flip ? -1 : 1;
+    const sx = x - dir * 36 * scale, sy = ground - 78 * scale;
+    const a = Math.atan2((tx - sx) * dir, ty - sy) * 180 / Math.PI;
+    play('Idle', { mod: p => Object.assign({}, p, { armF: a, elbF: 0, eyes: 'determined', mouth: 'grin', lean: -3 }) });
+    blendFrom = null;
+    const rad = a * Math.PI / 180;
+    return { x: sx + dir * Math.sin(rad) * 62 * scale, y: sy + Math.cos(rad) * 62 * scale };
+  }
+
+  async function teleportOut() {
+    const t0 = performance.now();
+    for (;;) {
+      const t = Math.min(1, (performance.now() - t0) / 150);
+      shrink = 1 - t;
+      if (t >= 1) break;
+      await frame();
+    }
+  }
+
+  async function teleportIn() {
+    const t0 = performance.now();
+    for (;;) {
+      const t = Math.min(1, (performance.now() - t0) / 170);
+      shrink = t < 0.7 ? t / 0.7 * 1.12 : 1.12 - 0.12 * (t - 0.7) / 0.3;
+      if (t >= 1) break;
+      await frame();
+    }
+    shrink = 1;
+  }
+
+  function nailBoard(pl) {
+    const b = document.createElement('div');
+    b.className = 'plank';
+    const h = Math.max(12, pl.w * 0.2);
+    b.style.width = `${pl.w}px`;
+    b.style.height = `${h}px`;
+    b.style.left = `${pl.x - pl.w / 2}px`;
+    b.style.top = `${pl.y - h / 2}px`;
+    b.style.setProperty('--rot', `${pl.rot}deg`);
+    document.body.appendChild(b);
+    boards.push(b);
+    b.animate([
+      { transform: `rotate(${pl.rot + 14}deg) scale(1.35)`, opacity: 0 },
+      { transform: `rotate(${pl.rot - 3}deg) scale(0.96)`, opacity: 1, offset: 0.7 },
+      { transform: `rotate(${pl.rot}deg) scale(1)`, opacity: 1 },
+    ], { duration: 220, easing: 'ease-out' });
+  }
+
+  function sparks(px, py) {
+    for (let i = 0; i < 7; i++) {
+      const a = rand(-Math.PI, 0), d = rand(18, 40) * Math.max(0.8, scale * 1.6);
+      drop(px, py, rand(3, 6), i % 2 ? '#ffe27a' : '#ffffff', [
+        { transform: 'translate(0, 0)', opacity: 1 },
+        { transform: `translate(${Math.cos(a) * d}px, ${Math.sin(a) * d}px) scale(0.3)`, opacity: 0 },
+      ], rand(240, 380));
+    }
+  }
+
+  function clearBuild() {
+    while (boards.length) {
+      const b = boards.pop();
+      const r = parseFloat(b.style.getPropertyValue('--rot')) || 0;
+      b.animate([
+        { transform: `rotate(${r}deg)`, opacity: 1 },
+        { transform: `translate(${rand(-20, 20)}px, 90px) rotate(${r + rand(-60, 60)}deg)`, opacity: 0 },
+      ], { duration: rand(600, 900), easing: 'cubic-bezier(.5,0,.9,.6)', fill: 'forwards' }).finished.then(() => b.remove());
+    }
+    if (hatOn) {
+      poof(x, ground - 175 * scale);
+      hatOn = 0;
+    }
+  }
+
+  async function finale(home) {
+    canDance = false;
+    // An idea! Bulb over the head, eyes light up
+    say('idea', 80, 1500);
+    play('Idle', { mod: p => Object.assign({}, p, { eyes: 'bright', mouth: 'o', front: 0.85, headRot: -8, armF: -40 }) });
+    await sleep(700);
+    play('Idle', { mod: p => Object.assign({}, p, { eyes: 'bright', mouth: 'grin', front: 0.85, headRot: -4, armF: -40, y: -6 }) });
+    await sleep(500);
+
+    // Hard hat drops on with a bounce
+    hatOn = 1;
+    const h0 = performance.now();
+    for (;;) {
+      const t = Math.min(1, (performance.now() - h0) / 420);
+      hatDrop = t < 0.6 ? 150 * (1 - t / 0.6) * (1 - t / 0.6) : -6 * Math.sin(Math.PI * (t - 0.6) / 0.4);
+      if (t >= 1) break;
+      await frame();
+    }
+    hatDrop = 0;
+    say('sparkles', 0, 800);
+    await sleep(350);
+
+    // Portal barrage: one portal for each job, plus one right next to it to jump into
+    const jobs = buildJobs();
+    const ph = 150 * scale, pw = ph * 0.34;
+    const portals = [];
+    const entry = { x: x + 48 * scale, y: ground };
+    const spots2 = [entry, ...jobs.map(j => ({ x: j.x + (j.left ? 1 : -1) * 34 * scale, y: j.y }))];
+    for (let i = 0; i < spots2.length; i++) {
+      const sp = spots2[i];
+      const tip = aimAt(sp.x, sp.y - ph / 2);
+      say(i % 2 ? 'exclaim' : 'sparkles', 0, 260);
+      fireAt(tip.x, tip.y, sp.x, sp.y - ph / 2, i % 2 ? 'orange' : 'cyan').then(() => {
+        portals.push(makePortal(sp.x, sp.y - ph / 2, pw, ph, i % 2 ? 'orange' : 'cyan'));
+      });
+      await sleep(190);
+    }
+    await sleep(420);
+
+    // Gun away, hammer out
+    poof(x + (flip ? -1 : 1) * 30 * scale, ground - 60 * scale);
+    hasGun = false;
+    hammerOn = true;
+    face(false);
+    play('Idle', { mod: p => Object.assign({}, p, { armF: 150, elbF: -10, eyes: 'determined', mouth: 'grin' }) });
+    await sleep(320);
+
+    // Speed-build: hop into the portal, pop out at each spot, slap a board on, bang bang bang, next!
+    face(false);
+    await walk(entry.x - 6 * scale, false, 3);
+    await teleportOut();
+    for (const j of jobs) {
+      x = j.x + (j.left ? 1 : -1) * 34 * scale;
+      ground = j.y;
+      face(j.left);
+      play('Idle');
+      blendFrom = null;
+      await teleportIn();
+      x = j.x;
+      nailBoard(j.plank);
+      play('Hammer', { rate: 1.5 });
+      const hit = duration('Hammer', 1.5) * 6 / 12;
+      for (let k = 0; k < 3; k++) {
+        await sleep(hit);
+        sparks(j.plank.x, j.plank.y);
+        await sleep(duration('Hammer', 1.5) - hit);
+      }
+      play('Idle');
+      await sleep(60);
+      face(!j.left);
+      x = j.x + (j.left ? 1 : -1) * 34 * scale - (j.left ? 6 : -6) * scale;
+      await teleportOut();
+    }
+
+    // Back home through the first portal, proud happy jump
+    x = entry.x;
+    ground = entry.y;
+    face(true);
+    play('Idle');
+    blendFrom = null;
+    await teleportIn();
+    await walk(home, false, 2.5);
+    portals.forEach(closePortal);
+    face(false);
     happy = true;
-    say('sparkles', 150, 1300);
+    say('sparkles', 120, 1300);
     play('Jump', { rate: 1.3 });
     setTimeout(() => squishWord(0.7), duration('Jump', 1.3) * 40 / 48);
     await sleep(duration('Jump', 1.3));
     happy = false;
     play('Idle');
-    await sleep(300);
+    await sleep(250);
     poof(x - 14 * scale, ground - 50 * scale);
-    hasGun = false;
-    canDance = true;
-    await wait(1200);
+    hammerOn = false;
   }
 
   async function run() {
