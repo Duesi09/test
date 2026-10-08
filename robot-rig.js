@@ -24,10 +24,10 @@
     fx: '#79d8ff',
   };
   const LW = 2.7;              // outline width
-  const HIP_Y = -39;           // hip joint height
-  const THIGH = 15, SHIN = 14; // leg segments
-  const UPPER = 13, FORE = 15; // arm segments
-  const NECK_Y = -88;
+  const HIP_Y = -36;           // hip joint height
+  const THIGH = 13, SHIN = 13; // leg segments
+  const UPPER = 11, FORE = 13; // arm segments
+  const NECK_Y = -86;
 
   // Cell used for exported frames (units). Ground sits near the bottom.
   const CELL = { w: 256, h: 320, groundX: 128, groundY: 296 };
@@ -68,7 +68,7 @@
 
   // Lowest foot bottom (local units, before root transform).
   function footBottom(p) {
-    const f = legPoints(-13, p.hipF, p.kneeF), b = legPoints(13, p.hipB, p.kneeB);
+    const f = legPoints(-15, p.hipF, p.kneeF), b = legPoints(15, p.hipB, p.kneeB);
     return Math.max(f.ay, b.ay) + 10;
   }
 
@@ -132,10 +132,10 @@
       ctx.save();
       ctx.translate(ax, ay);
       ctx.rotate(fa);
-      rrect(ctx, -13, -3, 30, 13, 6.5);
+      rrect(ctx, -15, -4, 33, 15, 7.5);
       ctx.restore();
     };
-    const W = 23;
+    const W = 27;
     seg(ctx, hx, HIP_Y, kx, ky, W + LW * 2, COL.out);
     seg(ctx, kx, ky, ax, ay, W + LW * 2, COL.out);
     footPath();
@@ -156,7 +156,7 @@
     ctx.save();
     ctx.translate(ax, ay);
     ctx.rotate(fa);
-    ctx.fillRect(-15, 6, 34, 6);
+    ctx.fillRect(-17, 7, 38, 6);
     ctx.restore();
     ctx.restore();
   }
@@ -187,11 +187,11 @@
     const ex = sx + UPPER * Math.sin(a), ey = sy + UPPER * Math.cos(a);
     const b = rad(ang + elb);
     const hx = ex + FORE * Math.sin(b), hy = ey + FORE * Math.cos(b);
-    const W = 20;
+    const W = 23;
     seg(ctx, sx, sy, ex, ey, W + 2 + LW * 2, COL.out);
     seg(ctx, ex, ey, hx, hy, W + LW * 2, COL.out);
     ctx.beginPath();
-    ctx.arc(hx, hy, 11.5 + LW, 0, Math.PI * 2);
+    ctx.arc(hx, hy, 13 + LW, 0, Math.PI * 2);
     ctx.fillStyle = COL.out;
     ctx.fill();
     seg(ctx, sx, sy, ex, ey, W + 2, back ? COL.navyBack : COL.navy);
@@ -203,18 +203,18 @@
       drawGun(ctx);
       ctx.restore();
       ctx.beginPath();
-      ctx.arc(hx, hy, 11.5 + LW / 2, 0, Math.PI * 2);
+      ctx.arc(hx, hy, 13 + LW / 2, 0, Math.PI * 2);
       ctx.lineWidth = LW; ctx.strokeStyle = COL.out; ctx.stroke();
     }
     ctx.beginPath();
-    ctx.arc(hx, hy, 11.5, 0, Math.PI * 2);
+    ctx.arc(hx, hy, 13, 0, Math.PI * 2);
     ctx.fillStyle = back ? COL.bodyBack : COL.body;
     ctx.fill();
     return { hx, hy };
   }
 
   function drawTorso(ctx) {
-    const path = () => rrect(ctx, -32, -94, 64, 58, 20);
+    const path = () => rrect(ctx, -38, -92, 76, 60, 28);
     path();
     ctx.lineJoin = 'round';
     ctx.strokeStyle = COL.out;
@@ -224,34 +224,34 @@
     path();
     ctx.clip();
     ctx.fillStyle = COL.shade;
-    ctx.fillRect(-36, -98, 72, 64);
-    rrect(ctx, -25, -98, 62, 56, 20);
+    ctx.fillRect(-42, -96, 84, 66);
+    rrect(ctx, -30, -96, 74, 58, 28);
     ctx.fillStyle = COL.body;
     ctx.fill();
     // navy hips / shorts
     ctx.fillStyle = COL.navy;
     ctx.beginPath();
-    ctx.moveTo(-36, -52);
-    ctx.quadraticCurveTo(0, -46, 36, -52);
-    ctx.lineTo(36, -30);
-    ctx.lineTo(-36, -30);
+    ctx.moveTo(-42, -50);
+    ctx.quadraticCurveTo(0, -43, 42, -50);
+    ctx.lineTo(42, -28);
+    ctx.lineTo(-42, -28);
     ctx.closePath();
     ctx.fill();
     ctx.strokeStyle = COL.out;
     ctx.lineWidth = 2.4;
     ctx.beginPath();
-    ctx.moveTo(-36, -52);
-    ctx.quadraticCurveTo(0, -46, 36, -52);
+    ctx.moveTo(-42, -50);
+    ctx.quadraticCurveTo(0, -43, 42, -50);
     ctx.stroke();
     // navy side panel (near side)
     ctx.fillStyle = COL.navy;
     ctx.beginPath();
-    ctx.ellipse(-33, -72, 10, 26, 0, 0, Math.PI * 2);
+    ctx.ellipse(-39, -70, 11, 26, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
     // chest display
     ctx.save();
-    rrect(ctx, -6, -80, 30, 16, 4);
+    rrect(ctx, -6, -79, 30, 16, 5);
     ctx.shadowColor = COL.cyan;
     ctx.shadowBlur = 8;
     ctx.fillStyle = COL.cyan;
@@ -261,7 +261,7 @@
     ctx.strokeStyle = COL.out;
     ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    rrect(ctx, -2, -77, 10, 3, 1.5);
+    rrect(ctx, -2, -76, 10, 3, 1.5);
     ctx.fill();
     ctx.restore();
   }
@@ -353,6 +353,12 @@
         oval(e1, 7, 10 * blinkY);
         oval(e2, 6.5, 10 * blinkY);
     }
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255, 128, 176, 0.55)';
+    ctx.beginPath(); ctx.ellipse(e1.x - 6, e1.y + 12, 6.5, 3.6, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(e2.x + 6, e2.y + 12, 5.5, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = COL.cyan;
+    ctx.shadowBlur = 9;
     const mx = 23 + p.look * 4, my = -114;
     ctx.lineWidth = 2.6;
     if (p.mouth === 'smile') {
@@ -372,7 +378,7 @@
     // far ear cup peeks out behind the head
     outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(57, cy + 3 + p.phone * 0.5, 10, 22, 0, 0, Math.PI * 2); }, COL.navyBack);
 
-    const head = () => squircle(ctx, 0, cy, 62, 49, 2.6);
+    const head = () => squircle(ctx, 0, cy, 63, 52, 2.35);
     head();
     ctx.lineJoin = 'round';
     ctx.strokeStyle = COL.out;
@@ -383,7 +389,7 @@
     ctx.clip();
     ctx.fillStyle = COL.shade;
     ctx.fillRect(-70, cy - 60, 140, 120);
-    squircle(ctx, 5, cy - 4, 60, 46, 2.6);
+    squircle(ctx, 5, cy - 4, 61, 49, 2.35);
     ctx.fillStyle = COL.body;
     ctx.fill();
     // headband over the top
@@ -620,13 +626,13 @@
     ctx.rotate(rad(p.rot));
     ctx.translate(-p.px, -p.py);
 
-    drawLeg(ctx, 13, p.hipB, p.kneeB, p.footB, true);
+    drawLeg(ctx, 15, p.hipB, p.kneeB, p.footB, true);
 
     ctx.save();
     ctx.translate(0, HIP_Y);
     ctx.rotate(rad(p.lean));
     ctx.translate(0, -HIP_Y);
-    drawArm(ctx, 31, -82, p.armB, p.elbB, true);
+    drawArm(ctx, 36, -79, p.armB, p.elbB, true);
     ctx.restore();
 
     ctx.save();
@@ -636,7 +642,7 @@
     drawTorso(ctx);
     ctx.restore();
 
-    drawLeg(ctx, -13, p.hipF, p.kneeF, p.footF, false);
+    drawLeg(ctx, -15, p.hipF, p.kneeF, p.footF, false);
 
     ctx.save();
     ctx.translate(0, HIP_Y);
@@ -648,7 +654,7 @@
     ctx.translate(0, -NECK_Y);
     drawHead(ctx, p);
     ctx.restore();
-    drawArm(ctx, -31, -81, p.armF, p.elbF, false, p.gun > 0.5);
+    drawArm(ctx, -36, -78, p.armF, p.elbF, false, p.gun > 0.5);
     ctx.restore();
 
     ctx.restore();
@@ -739,7 +745,7 @@
       pose(f) {
         const p = f / 48;
         const legAt = (q) => {           // q: 0..1 in this leg's cycle; swing first 30%
-          const A = 28;
+          const A = 34;
           if (q < 0.3) {
             const t = smooth(q / 0.3);
             return { hip: lerp(-A, A, t), knee: 46 * Math.sin(Math.PI * q / 0.3), foot: 12 * Math.sin(Math.PI * q / 0.3) };

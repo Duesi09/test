@@ -11,6 +11,8 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const BLEND_MS = 180;
   const CENTER = 90;                 // body centre height above the feet (rig units)
+  const SPEED = 1.3;                 // global tempo: everything plays a bit faster
+  const GRAVITY = 2600;              // rig units / s^2 (the robot is ~180 units tall)
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -27,6 +29,7 @@
   let portal = null;                     // {ax, ay, bx, by}: entry plane x = ax, exit through the ceiling at (bx, by)
   let clipRect = null;                   // {maxY} hides everything below a line (the hidden pool)
   let canDance = false, clicked = false;
+  let leanFx = 0, leanTarget = 0;     // extra lean from speeding up / slowing down
 
   let clip = clips.Idle, clipStart = 0, rate = 1, override = null;
   let lastPose = clip.pose(0), blendFrom = null, blendStart = 0;
@@ -36,10 +39,10 @@
     blendStart = performance.now();
     clip = clips[name];
     clipStart = performance.now();
-    rate = opts.rate || 1;
+    rate = (opts.rate || 1) * SPEED;
     override = opts.mod || null;
   }
-  const duration = (name, r = 1) => clips[name].frames / clips[name].fps / r * 1000;
+  const duration = (name, r = 1) => clips[name].frames / clips[name].fps / (r * SPEED) * 1000;
 
   // ---------- Layout ----------
   function lineOf(el) {
@@ -88,6 +91,8 @@
     if (override) pose = override(pose, f);
     if (hasGun) pose = Object.assign({}, pose, { gun: 1 });
     if (happy) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin' });
+    leanFx += (leanTarget - leanFx) * 0.15;
+    if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
     if (blendFrom) {
       const t = (now - blendStart) / BLEND_MS;
       if (t >= 1) blendFrom = null;
@@ -154,7 +159,7 @@
   }
 
   async function wait(ms) {
-    const end = performance.now() + ms;
+    const end = performance.now() + ms / SPEED;
     while (performance.now() < end) {
       if (await maybeDance()) return;
       await sleep(60);
@@ -162,21 +167,34 @@
   }
 
   // ---------- Moves ----------
-  async function walk(tx, run, speedMul = 1) {
+  // Speeds are matched to the stride so the feet don't slide; it eases in and out
+  // and leans into the acceleration like a real little body would.
+  async function walk(tx, run, speedMul = 1, stopAtEnd = true) {
     if (Math.abs(tx - x) < 2) return;
     flip = tx < x;
-    const restart = () => play(run ? 'Run' : 'Walk', { rate: run ? 1 : 1.5 });
+    const clipRate = run ? 2 : 2;
+    const restart = () => play(run ? 'Run' : 'Walk', { rate: clipRate });
     restart();
-    const v = (run ? 150 : 34) * scale * speedMul;
-    let last = performance.now();
+    const vmax = (run ? 76 : 14) * clipRate * SPEED * scale * speedMul;
+    const accel = vmax / 0.22;
+    let v = 0, last = performance.now();
     while (Math.abs(tx - x) > 0.5) {
-      if (await maybeDance()) { restart(); last = performance.now(); }
+      if (await maybeDance()) { restart(); last = performance.now(); v = 0; }
       const now = await frame();
-      const step = v * Math.min(0.05, (now - last) / 1000);
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      x += clamp(tx - x, -step, step);
+      const dist = Math.abs(tx - x);
+      const brake = stopAtEnd ? Math.sqrt(2 * accel * dist) : vmax;
+      const nv = Math.min(vmax, v + accel * dt, brake + 4);
+      leanTarget = clamp((nv - v) / dt / accel, -1, 1) * (run ? 7 : 4);
+      v = nv;
+      x += clamp(tx - x, -v * dt, v * dt);
     }
-    play('Idle');
+    leanTarget = stopAtEnd ? -4 : 0;
+    if (stopAtEnd) {
+      play('Idle');
+      setTimeout(() => { leanTarget = 0; }, 160);
+    }
   }
 
   // Ride a jump-style clip along path(t) -> {x, y}. Frames between takeoff and land fly the path.
@@ -287,7 +305,7 @@
     await wait(1600);
 
     // 1. Three goofy steps to the right, then wave at the camera
-    await walk(Math.min(s.top.r, x + 102 * scale), false);
+    await walk(Math.min(s.top.r, x + 62 * scale), false);
     flip = false;
     play('Wave');
     await wait(2600);
@@ -354,10 +372,10 @@
     play('Shoot');
     let pA, pB;
     const shots = (async () => {
-      await sleep(8 / 16 * 1000);
+      await sleep(8 / 16 / SPEED * 1000);
       await fireAt(x - 50 * scale, ground - 84 * scale, A.x, A.y, 'cyan');
       pA = makePortal(A.x, A.y, pw, ph, 'cyan');
-      await sleep(Math.max(0, 22 / 16 * 1000 - 8 / 16 * 1000 - 360));
+      await sleep(Math.max(0, (22 - 8) / 16 / SPEED * 1000 - 360));
       await fireAt(x - 10 * scale, ground - 152 * scale, B.x, B.y, 'orange');
       pB = makePortal(B.x, B.y, ph, pw, 'orange');
     })();
@@ -365,32 +383,46 @@
     await shots;
     await sleep(300);
 
-    // 6. Step into the N portal: the part that goes in is already falling out of the ceiling
+    // 6. Step into the N portal. The part that goes in is already hanging out of the ceiling,
+    //    and once it is halfway through gravity takes over and yanks it the rest of the way.
     portal = { ax: A.x, ay: s.n.base - 0.5 * ph, bx: B.x, by: B.y };
-    await walk(A.x - 70 * scale, false, 1.6);
+    await walk(A.x, false, 1, false);
+    play('Tumble');
+    leanTarget = 0;
+    const g = GRAVITY * scale;
+    let v = 14 * 2 * SPEED * scale, last = performance.now();
+    while (x > A.x - 75 * scale) {
+      const now = await frame();
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      v += g * dt * 0.75;                                  // most of the body is still on this side
+      x -= v * dt;
+    }
 
-    // Hand over to the ceiling copy: same picture, now expressed in ceiling coordinates
+    // Hand over to the ceiling copy: same picture, now in ceiling coordinates
     const fx = portal.bx + (ground - portal.ay), fy = portal.by - (x - portal.ax);
-    const C0 = { x: fx - CENTER * scale, y: fy };          // body centre after the 90 degree turn
     portal = null;
     spinRot = -90;                                         // same quarter turn the portal applied
-    x = C0.x; ground = C0.y + CENTER * scale;
+    x = fx - CENTER * scale;
+    ground = fy + CENTER * scale;
     closePortal(pA);
 
-    // 7. Tumble down uncontrollably onto "COMING"
-    play('Tumble');
+    // 7. Falls for real: keeps the speed it had, gravity does the rest, spinning out of control
     s = spots();
     const end = { x: home, y: s.top.y };
-    const startX = x, startY = ground, T = 1300;
+    const x1 = x, y1 = ground;
+    const T = (-v + Math.sqrt(v * v + 2 * g * (end.y - y1))) / g;   // time to reach the letters
     const t0 = performance.now();
     for (;;) {
-      const t = Math.min(1, (performance.now() - t0) / T);
-      x = startX + (end.x - startX) * ease(t) + Math.sin(t * 14) * 6 * scale * (1 - t);
-      ground = startY + (end.y - startY) * t * t;
-      spinRot = -90 - 630 * t;                             // keeps spinning the same way, ends upright
-      if (t >= 1) break;
+      const t = Math.min(T, (performance.now() - t0) / 1000);
+      const k = t / T;
+      x = x1 + (end.x - x1) * ease(k);
+      ground = y1 + v * t + 0.5 * g * t * t;
+      spinRot = -90 - 630 * k;                             // keeps spinning the same way, ends upright
+      if (t >= T) break;
       await frame();
     }
+    ground = end.y;
     spinRot = 0;
     closePortal(pB);
 
