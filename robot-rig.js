@@ -595,7 +595,7 @@
   /**
    * Draw a pose.
    * opt.x, opt.y: where the ground origin lands on the canvas (px)
-   * opt.scale: px per unit, opt.flip: face left, opt.shadow: draw the ground shadow (default true)
+   * opt.scale: px per unit, opt.flip: face left, opt.shadow: draw a ground shadow (off by default)
    */
   function draw(ctx, pose, opt = {}) {
     const p = resolve(pose);
@@ -604,7 +604,7 @@
     ctx.translate(opt.x ?? 0, opt.y ?? 0);
     ctx.scale(s * (opt.flip ? -1 : 1), s);
 
-    if (opt.shadow !== false) {
+    if (opt.shadow === true) {
       const lift = Math.max(0, -(p.rootY));
       const w = 48 * p.shadowW * clamp(1 - lift / 260, 0.45, 1);
       ctx.fillStyle = COL.shadow;
@@ -1031,17 +1031,17 @@
           [0, { y: 0, rot: 0, sy: 1, sx: 1, hipF: 0, hipB: 0, kneeF: 0, kneeB: 0, armF: -18, armB: 12, elbF: 8, elbB: 8, lean: 0, headRot: 0 }],
           [6, { y: 0, sy: 0.84, sx: 1.1, hipF: 32, hipB: 30, kneeF: 66, kneeB: 64, armF: -40, armB: -50, lean: 14, headRot: 6 }],
           [11, { y: -50, sy: 1.15, sx: 0.9, hipF: -6, hipB: -10, kneeF: 6, kneeB: 6, armF: 160, armB: 150, elbF: 6, elbB: 6, lean: -6, headRot: -8 }],
-          [16, { y: -86, sy: 1, sx: 1, rot: 40, hipF: 105, hipB: 100, kneeF: 140, kneeB: 135, armF: 70, elbF: 75, armB: 60, elbB: 75, lean: 18, headRot: 18 }],
-          [24, { y: -100, rot: 160 }],
-          [32, { y: -62, rot: 280 }],
-          [40, { y: -12, rot: 400 }],
-          [47, { y: 0, rot: 470 }],
+          [16, { y: -86, sy: 1, sx: 1, rot: -40, hipF: 105, hipB: 100, kneeF: 140, kneeB: 135, armF: 70, elbF: 75, armB: 60, elbB: 75, lean: 18, headRot: 18 }],
+          [24, { y: -100, rot: -160 }],
+          [32, { y: -62, rot: -280 }],
+          [40, { y: -12, rot: -400 }],
+          [47, { y: 0, rot: -470 }],
         ], f);
         k.py = -80;
         k.eyes = f < 11 ? 'normal' : 'happy';
         k.mouth = f < 6 ? 'smile' : f < 16 ? 'grin' : 'o';
         k.phone = f > 10 ? 3 : 0;
-        k.fx = f >= 18 && f <= 44 ? [{ type: 'arcs', x: 0, y: k.y - 80, a0: rad(k.rot) + 2, a: 0.6 }] : [];
+        k.fx = f >= 18 && f <= 44 ? [{ type: 'arcs', x: 0, y: k.y - 80, a0: -rad(k.rot) + 1.2, a: 0.6 }] : [];
         return k;
       },
     },
@@ -1108,9 +1108,9 @@
           [5, { armF: 88, elbF: 0, lean: -2 }],
           [8, { armF: 102, lean: -9, headRot: -7, x: -4 }],
           [12, { armF: 88, lean: -2, headRot: 0, x: 0 }],
-          [19, { armF: 70, elbF: 0 }],
-          [22, { armF: 84, lean: -8, headRot: -6, x: -4 }],
-          [26, { armF: 70, lean: -2, headRot: 0, x: 0 }],
+          [18, { armF: 150, elbF: 0, headRot: -16, lean: -6 }],
+          [22, { armF: 160, lean: -12, headRot: -20, x: -4 }],
+          [26, { armF: 150, lean: -6, headRot: -16, x: 0 }],
           [33, { armF: 52, elbF: 42, lean: 0 }],
           [39, { armF: 52, elbF: 42 }],
         ], f);
@@ -1119,7 +1119,43 @@
         k.mouth = f >= 30 ? 'grin' : 'none';
         k.fx = [];
         if (f >= 8 && f < 12) k.fx.push({ type: 'flash', x: 50, y: -84, t: (f - 8) / 4 });
-        if (f >= 22 && f < 26) k.fx.push({ type: 'flash', x: 44, y: -56, t: (f - 22) / 4 });
+        if (f >= 22 && f < 26) k.fx.push({ type: 'flash', x: 10, y: -152, t: (f - 22) / 4 });
+        return k;
+      },
+    },
+
+    Tumble: {
+      frames: 16, fps: 24, loop: true,
+      pose(f) {
+        const a = Math.sin(TAU * f / 8), b = Math.cos(TAU * f / 8);
+        return {
+          armF: 70 + 110 * a, armB: -60 - 110 * a, elbF: 20 + 30 * b, elbB: 20 - 30 * b,
+          hipF: 35 * b, hipB: -35 * b, kneeF: 50 + 35 * a, kneeB: 50 - 35 * a,
+          headRot: 12 * a, lean: 6 * b, phone: 4 * a,
+          eyes: 'surprised', mouth: 'o',
+        };
+      },
+    },
+
+    SuperheroLanding: {
+      frames: 40, fps: 16, loop: false,
+      pose(f) {
+        const LAND = { g: 0, x: -12, y: 16, lean: 16, headRot: 6, headY: 3, hipF: -30, kneeF: 112, hipB: 80, kneeB: 92, footF: 0, footB: 0, armF: 26, elbF: 0, armB: -125, elbB: 0, sx: 1.06, sy: 0.94 };
+        const k = keys([
+          [0, Object.assign({}, LAND, { y: 20, sx: 1.14, sy: 0.84 })],
+          [4, LAND],
+          [16, LAND],
+          [22, Object.assign({}, LAND, { headRot: -8, sx: 1, sy: 1 })],
+          [30, { g: 1, x: 0, y: 0, lean: 6, headRot: -4, headY: 0, hipF: 10, kneeF: 22, hipB: 14, kneeB: 24, armF: -10, elbF: 10, armB: 20, elbB: 10, sx: 1, sy: 1 }],
+          [39, { g: 1, y: 0, lean: 0, headRot: 0, hipF: 0, kneeF: 0, hipB: 0, kneeB: 0, armF: -18, elbF: 8, armB: 12, elbB: 8 }],
+        ], f);
+        k.eyes = f < 18 ? 'determined' : f < 26 ? 'normal' : 'happy';
+        k.mouth = f >= 26 ? 'grin' : 'none';
+        k.fx = [];
+        if (f < 10) {
+          k.fx.push({ type: 'impact', x: 0, y: -6, t: f / 10 });
+          k.fx.push({ type: 'dust', x: 0, t: f / 10 });
+        }
         return k;
       },
     },

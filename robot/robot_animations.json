@@ -5377,6 +5377,420 @@
           "h": 480
         }
       ]
+    },
+    {
+      "name": "Tumble",
+      "texture": "Sprites/Tumble.png",
+      "frames": 16,
+      "fps": 24,
+      "loop": true,
+      "columns": 8,
+      "rows": 2,
+      "rects": [
+        {
+          "name": "Tumble_000",
+          "x": 0,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_001",
+          "x": 384,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_002",
+          "x": 768,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_003",
+          "x": 1152,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_004",
+          "x": 1536,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_005",
+          "x": 1920,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_006",
+          "x": 2304,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_007",
+          "x": 2688,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_008",
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_009",
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_010",
+          "x": 768,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_011",
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_012",
+          "x": 1536,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_013",
+          "x": 1920,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_014",
+          "x": 2304,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "Tumble_015",
+          "x": 2688,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        }
+      ]
+    },
+    {
+      "name": "SuperheroLanding",
+      "texture": "Sprites/SuperheroLanding.png",
+      "frames": 40,
+      "fps": 16,
+      "loop": false,
+      "columns": 8,
+      "rows": 5,
+      "rects": [
+        {
+          "name": "SuperheroLanding_000",
+          "x": 0,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_001",
+          "x": 384,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_002",
+          "x": 768,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_003",
+          "x": 1152,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_004",
+          "x": 1536,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_005",
+          "x": 1920,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_006",
+          "x": 2304,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_007",
+          "x": 2688,
+          "y": 1920,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_008",
+          "x": 0,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_009",
+          "x": 384,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_010",
+          "x": 768,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_011",
+          "x": 1152,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_012",
+          "x": 1536,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_013",
+          "x": 1920,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_014",
+          "x": 2304,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_015",
+          "x": 2688,
+          "y": 1440,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_016",
+          "x": 0,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_017",
+          "x": 384,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_018",
+          "x": 768,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_019",
+          "x": 1152,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_020",
+          "x": 1536,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_021",
+          "x": 1920,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_022",
+          "x": 2304,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_023",
+          "x": 2688,
+          "y": 960,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_024",
+          "x": 0,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_025",
+          "x": 384,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_026",
+          "x": 768,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_027",
+          "x": 1152,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_028",
+          "x": 1536,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_029",
+          "x": 1920,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_030",
+          "x": 2304,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_031",
+          "x": 2688,
+          "y": 480,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_032",
+          "x": 0,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_033",
+          "x": 384,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_034",
+          "x": 768,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_035",
+          "x": 1152,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_036",
+          "x": 1536,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_037",
+          "x": 1920,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_038",
+          "x": 2304,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        },
+        {
+          "name": "SuperheroLanding_039",
+          "x": 2688,
+          "y": 0,
+          "w": 384,
+          "h": 480
+        }
+      ]
     }
   ]
 }
