@@ -35,3 +35,12 @@ if (fr) {
   RobotRig.draw(ctx, RobotRig.clips[n].pose(+i), { x: CELL.groundX * sc, y: CELL.groundY * sc, scale: sc });
 }
 </script>
+<script>
+// ?front=1 renders Idle frame 0 at several front amounts
+const fq = new URLSearchParams(location.search).get('front');
+if (fq) {
+  const sc = 1.2, c = document.getElementById('c'); c.width = CELL.w * sc * 3; c.height = CELL.h * sc;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#f4f6fb'; ctx.fillRect(0, 0, c.width, c.height);
+  [0, 0.5, 1].forEach((f, i) => RobotRig.draw(ctx, Object.assign(RobotRig.clips.Idle.pose(0), { front: f }), { x: (i + 0.5) * CELL.w * sc, y: CELL.groundY * sc, scale: sc }));
+}
+</script>

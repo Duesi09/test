@@ -49,6 +49,7 @@
     gun: 0,                      // > 0.5 = holding the portal gun
     mirror: false,               // instant left/right swap (used by Dab)
     eq: 0,                       // phase of the little equaliser on the chest screen
+    front: 0,                    // 0 = three-quarter view, 1 = facing the camera
     shadowW: 1,
   };
   const NUMERIC = Object.keys(BASE).filter(k => typeof BASE[k] === 'number');
@@ -224,7 +225,9 @@
   }
 
   let eqPhase = 0;
+  let torsoFront = 0;
   function drawTorso(ctx) {
+    const sdx = -9 * torsoFront;
     const path = () => rrect(ctx, -38, -92, 76, 60, 28);
     path();
     ctx.lineJoin = 'round';
@@ -262,12 +265,14 @@
     // navy side panel (near side)
     ctx.fillStyle = COL.navy;
     ctx.beginPath();
+    ctx.globalAlpha = 1 - torsoFront;
     ctx.ellipse(-39, -70, 11, 26, 0, 0, Math.PI * 2);
     ctx.fill();
+    ctx.globalAlpha = 1;
     ctx.restore();
     // chest display
     ctx.save();
-    rrect(ctx, -6, -79, 30, 16, 5);
+    rrect(ctx, -6 + sdx, -79, 30, 16, 5);
     ctx.shadowColor = COL.cyan;
     ctx.shadowBlur = 8;
     ctx.fillStyle = COL.cyan;
@@ -277,19 +282,20 @@
     ctx.strokeStyle = COL.out;
     ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    rrect(ctx, -2, -76, 10, 3, 1.5);
+    rrect(ctx, -2 + sdx, -76, 10, 3, 1.5);
     ctx.fill();
     ctx.fillStyle = COL.cyanDeep;
     for (let i = 0; i < 4; i++) {
       const h = 2.5 + 5 * Math.abs(Math.sin(eqPhase * 6 + i * 1.7));
-      rrect(ctx, 0 + i * 5.5, -66 - h, 3.4, h, 1.2);
+      rrect(ctx, 0 + sdx + i * 5.5, -66 - h, 3.4, h, 1.2);
       ctx.fill();
     }
     ctx.restore();
   }
 
   function drawEyes(ctx, p) {
-    const e1 = { x: 7 + p.look * 4, y: -130 }, e2 = { x: 39 + p.look * 4, y: -130 };
+    const fdx = -23 * clamp(p.front, 0, 1);
+    const e1 = { x: 7 + fdx + p.look * 4, y: -130 }, e2 = { x: 39 + fdx + p.look * 4, y: -130 };
     ctx.save();
     ctx.shadowColor = COL.cyan;
     ctx.shadowBlur = 9;
@@ -394,7 +400,7 @@
     ctx.beginPath(); ctx.ellipse(e2.x + 6, e2.y + 12, 5.5, 3.4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = COL.cyan;
     ctx.shadowBlur = 9;
-    const mx = 23 + p.look * 4, my = -114;
+    const mx = 23 + fdx + p.look * 4, my = -114;
     ctx.lineWidth = 2.6;
     if (p.mouth === 'smile') {
       ctx.beginPath(); ctx.moveTo(mx - 6, my - 2); ctx.quadraticCurveTo(mx, my + 5, mx + 6, my - 2); ctx.stroke();
@@ -411,7 +417,17 @@
   function drawHead(ctx, p) {
     const cy = -132;
     // far ear cup peeks out behind the head
-    outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(57, cy + 3 + p.phone * 0.5, 10, 22, 0, 0, Math.PI * 2); }, COL.navyBack);
+    const F = clamp(p.front, 0, 1);
+    const fcx = 57 + 4 * F, fey = cy + 3 + 1 * F + p.phone * 0.5;
+    outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(fcx, fey, 10 + 8 * F, 22 + 5 * F, 0, 0, Math.PI * 2); }, F > 0.5 ? COL.navy : COL.navyBack);
+    if (F > 0.05) {
+      ctx.save();
+      ctx.globalAlpha = F;
+      ctx.shadowColor = COL.cyan; ctx.shadowBlur = 8;
+      ctx.strokeStyle = COL.cyan; ctx.lineWidth = 3.4;
+      ctx.beginPath(); ctx.ellipse(fcx + 5, fey, 10, 20, 0, -Math.PI * 0.45, Math.PI * 0.45); ctx.stroke();
+      ctx.restore();
+    }
 
     const head = () => squircle(ctx, 0, cy, 63, 54, 2.15);
     head();
@@ -440,20 +456,20 @@
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-30, cy + 38); ctx.quadraticCurveTo(-42, cy + 10, -34, cy - 16); ctx.stroke();
     // visor
-    rrect(ctx, -27, cy - 27, 91, 54, 25);
+    rrect(ctx, -27 - 18.5 * F, cy - 27, 91, 54, 25);
     ctx.fillStyle = COL.visor;
     ctx.fill();
     ctx.restore();
 
     // visor shine
     ctx.save();
-    rrect(ctx, -27, cy - 27, 91, 54, 25);
+    rrect(ctx, -27 - 18.5 * F, cy - 27, 91, 54, 25);
     ctx.clip();
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(-12, cy - 14);
-    ctx.quadraticCurveTo(-4, cy - 21, 10, cy - 21);
+    ctx.moveTo(-12 - 18.5 * F, cy - 14);
+    ctx.quadraticCurveTo(-4 - 18.5 * F, cy - 21, 10 - 18.5 * F, cy - 21);
     ctx.stroke();
     ctx.restore();
 
@@ -461,10 +477,11 @@
 
     // near ear cup
     const ey = cy + 4 + p.phone;
-    outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(-52, ey, 18, 27, 0, 0, Math.PI * 2); }, COL.navy);
+    const nx = -8 * F;
+    outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(-52 + nx, ey, 18, 27, 0, 0, Math.PI * 2); }, COL.navy);
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(-55, ey, 11, 21, 0, 0, Math.PI * 2);
+    ctx.ellipse(-55 + nx, ey, 11, 21, 0, 0, Math.PI * 2);
     ctx.fillStyle = COL.navyDark;
     ctx.fill();
     ctx.shadowColor = COL.cyan;
@@ -472,13 +489,13 @@
     ctx.strokeStyle = COL.cyan;
     ctx.lineWidth = 3.4;
     ctx.beginPath();
-    ctx.ellipse(-57, ey, 10, 20, 0, Math.PI * 0.55, Math.PI * 1.45);
+    ctx.ellipse(-57 + nx, ey, 10, 20, 0, Math.PI * 0.55, Math.PI * 1.45);
     ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.fillStyle = 'rgba(128, 242, 255, 0.18)';
-    ctx.beginPath(); ctx.ellipse(-54, ey, 6, 13, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-54 + nx, ey, 6, 13, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8fa2e0';
-    ctx.beginPath(); ctx.arc(-50, ey - 19, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-50 + nx, ey - 19, 2.2, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 
@@ -690,7 +707,7 @@
     ctx.translate(0, HIP_Y);
     ctx.rotate(rad(p.lean));
     ctx.translate(0, -HIP_Y);
-    drawArm(ctx, 36, -79, p.armB, p.elbB, true);
+    if (p.front <= 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, true);
     ctx.restore();
 
     ctx.save();
@@ -698,7 +715,9 @@
     ctx.rotate(rad(p.lean));
     ctx.translate(0, -HIP_Y);
     eqPhase = p.eq;
+    torsoFront = clamp(p.front, 0, 1);
     drawTorso(ctx);
+    if (p.front > 0.5) drawArm(ctx, 36, -79, p.armB, p.elbB, false);
     ctx.restore();
 
     drawLeg(ctx, -15, p.hipF, p.kneeF, p.footF, false);
@@ -1057,7 +1076,7 @@
           lean: -3,
           kneeF: 6 * (1 - hop), kneeB: 6 * (1 - hop),
           phone: 1.5 * w,
-          eyes: 'happy', mouth: 'grin',
+          eyes: 'happy', mouth: 'grin', front: 1,
         };
       },
     },
@@ -1075,7 +1094,7 @@
           y: -3 * Math.abs(c),
           headRot: -7 * s, headX: 2 * s,
           phone: 2 * s,
-          eyes: 'happy', mouth: 'grin',
+          eyes: 'happy', mouth: 'grin', front: 1,
         };
       },
     },
@@ -1090,6 +1109,7 @@
         k.mirror = f >= 16;
         k.eyes = (f >= 5 && f < 12) || (f >= 21 && f < 28) ? 'happy' : 'normal';
         k.mouth = 'grin';
+        k.front = 1;
         return k;
       },
     },

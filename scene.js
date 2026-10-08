@@ -110,7 +110,7 @@
     let pose = clip.pose(f);
     if (override) pose = override(pose, f);
     if (hasGun) pose = Object.assign({}, pose, { gun: 1 });
-    if (happy) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin' });
+    if (happy) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin', front: 1 });
     leanFx += (leanTarget - leanFx) * 0.15;
     if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
     pose = followThrough(pose, now);
@@ -163,6 +163,7 @@
     if (fidget.type === 'tilt') {
       p.headRot = (p.headRot || 0) - 14 * k;
       p.armB = (p.armB || 0) + 25 * k;
+      p.front = 0.7 * k;
       if (k > 0.5) { p.eyes = 'happy'; p.mouth = 'smile'; }
     } else if (fidget.type === 'hop') {
       const air = Math.max(0, Math.sin(Math.PI * Math.min(1, t / 0.75)));
@@ -175,6 +176,7 @@
     } else {
       p.headRot = (p.headRot || 0) + 8 * k;
       p.headY = (p.headY || 0) + 2 * k;
+      p.front = 0.95 * k;
       p.lean = (p.lean || 0) + 4 * k;
       p.mouth = 'smile';
     }
