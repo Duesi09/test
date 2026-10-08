@@ -8,91 +8,96 @@
   <meta property="og:title" content="Duesify — Portfolio">
   <meta property="og:description" content="Portfolio coming soon.">
   <meta property="og:url" content="https://www.duesify.com">
-  <meta name="theme-color" content="#0c0c10">
+  <meta name="theme-color" content="#0b1631">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0c0c10;
-      --surface: #15151c;
-      --border: #26262f;
-      --text: #f4f4f6;
-      --muted: #8d8d99;
-      --accent: #7c6cff;
-      --accent-hover: #8f82ff;
+      --bg: #0b1631;
+      --surface: #11204a;
+      --surface-2: #152858;
+      --border: #213a72;
+      --text: #eaf0ff;
+      --muted: #8fa2cc;
+      --accent: #4f8cff;
+      --accent-hover: #6a9dff;
+      --cyan: #7de3f5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); }
     body {
+      position: relative;
       min-height: 100vh;
       min-height: 100svh;
       display: flex;
       flex-direction: column;
       background: var(--bg);
       color: var(--text);
-      font-family: "Geist", system-ui, sans-serif;
+      font-family: "Manrope", system-ui, sans-serif;
       font-size: 16px;
       line-height: 1.6;
+      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
     .wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 24px; }
 
+    /* Header */
     header .wrap {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 72px;
+      height: 76px;
     }
     .logo {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 17px;
       color: var(--text);
       text-decoration: none;
     }
-    .logo-mark {
-      width: 28px; height: 28px;
-      border-radius: 8px;
-      background: var(--accent);
-      display: grid; place-items: center;
-      font-size: 15px; font-weight: 600; color: #fff;
-    }
+    .logo img { width: 30px; height: 30px; display: block; }
     .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
       font-size: 13px;
+      font-weight: 500;
       color: var(--muted);
-      display: flex; align-items: center; gap: 8px;
     }
     .status::before {
       content: "";
       width: 6px; height: 6px; border-radius: 50%;
-      background: var(--accent);
+      background: var(--cyan);
     }
 
-    main { flex: 1; display: flex; align-items: center; }
-    .hero { max-width: 620px; padding: 64px 0 96px; }
-    .eyebrow {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
+    /* Hero */
+    main { flex: 1; }
+    .hero { text-align: center; padding: 104px 0 0; }
     h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      font-weight: 600;
-      line-height: 1.08;
-      letter-spacing: -0.035em;
+      display: inline-block;
+      max-width: 16ch;
+      font-size: clamp(2.4rem, 6.4vw, 4.4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
     }
+    h1 span { color: var(--cyan); }
     .lead {
-      margin-top: 20px;
+      margin: 20px auto 0;
+      max-width: 46ch;
       font-size: 18px;
       color: var(--muted);
-      max-width: 48ch;
     }
 
     form {
-      margin-top: 36px;
+      margin: 36px auto 0;
       display: flex;
       gap: 10px;
       max-width: 440px;
@@ -100,68 +105,200 @@
     input[type="email"] {
       flex: 1;
       min-width: 0;
-      height: 46px;
-      padding: 0 14px;
+      height: 48px;
+      padding: 0 16px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       color: var(--text);
       font: inherit;
       font-size: 15px;
       transition: border-color 0.15s;
     }
-    input[type="email"]::placeholder { color: #5d5d68; }
+    input[type="email"]::placeholder { color: #5f74a3; }
     input[type="email"]:focus { outline: none; border-color: var(--accent); }
     button {
-      height: 46px;
-      padding: 0 20px;
+      height: 48px;
+      padding: 0 22px;
       border: 0;
-      border-radius: 10px;
+      border-radius: 12px;
       background: var(--accent);
       color: #fff;
       font: inherit;
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       transition: background 0.15s;
     }
     button:hover { background: var(--accent-hover); }
-    button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .hint { margin-top: 12px; font-size: 13px; color: #5d5d68; }
+    button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+    .hint { margin-top: 12px; font-size: 13px; color: #5f74a3; }
     .hidden { display: none; }
 
+    /* Preview cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 120px 0 120px;
+    }
+    .card {
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .tag {
+      padding: 2px 10px;
+      border-radius: 999px;
+      background: var(--surface-2);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+    }
+    .card h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+    .card p { margin-top: 4px; font-size: 14px; color: var(--muted); }
+
+    /* Footer = the ground the robot walks on */
     footer { border-top: 1px solid var(--border); }
     footer .wrap {
       display: flex;
       justify-content: space-between;
       gap: 16px;
-      height: 64px;
+      height: 68px;
       align-items: center;
       font-size: 13px;
       color: var(--muted);
     }
 
+    @media (max-width: 760px) {
+      .hero { padding-top: 88px; }
+      .cards { grid-template-columns: 1fr; gap: 88px; margin: 110px 0 100px; }
+    }
     @media (max-width: 520px) {
       form { flex-direction: column; }
       input[type="email"] { flex: none; }
       button { width: 100%; }
+    }
+
+    /* ---------- Robot ---------- */
+    .bot {
+      position: absolute;
+      top: 0; left: 0;
+      width: 62px; height: 77px;
+      z-index: 20;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      will-change: transform;
+    }
+    .bot .dir, .bot .spin { width: 100%; height: 100%; }
+    .bot .spin { transform-origin: 50% 55%; }
+    .bot svg { width: 100%; height: 100%; display: block; overflow: visible; }
+    .bot svg * { transform-box: view-box; }
+    .rig   { transform-origin: 50px 120px; transition: transform 0.15s; }
+    .head  { transform-origin: 50px 66px; transition: transform 0.25s; }
+    .arm-l { transform-origin: 32px 74px; transition: transform 0.2s; }
+    .arm-r { transform-origin: 68px 74px; transition: transform 0.2s; }
+    .leg-l { transform-origin: 42px 98px; }
+    .leg-r { transform-origin: 58px 98px; }
+    .eye   { transform-box: fill-box; transform-origin: center; transition: transform 0.08s; }
+    .eyes  { transition: transform 0.2s; }
+    .blink .eye { transform: scaleY(0.12); }
+
+    .walking .rig   { animation: bob 0.22s ease-in-out infinite alternate; }
+    .walking .leg-l { animation: step 0.44s ease-in-out infinite alternate; }
+    .walking .leg-r { animation: step 0.44s ease-in-out infinite alternate-reverse; }
+    .walking .arm-l { animation: swing 0.44s ease-in-out infinite alternate-reverse; }
+    .walking .arm-r { animation: swing 0.44s ease-in-out infinite alternate; }
+    @keyframes bob   { to { transform: translateY(-3px); } }
+    @keyframes step  { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
+    @keyframes swing { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+
+    .crouch .rig { transform: scale(1.06, 0.86); }
+    .land .rig   { transform: scale(1.1, 0.84); }
+    .air .arm-l  { transform: rotate(140deg); }
+    .air .arm-r  { transform: rotate(-140deg); }
+    .air .leg-l  { transform: rotate(-12deg); }
+    .air .leg-r  { transform: rotate(12deg); }
+
+    .wave .arm-r { animation: wave 0.32s ease-in-out infinite alternate; }
+    .wave .head  { transform: rotate(-6deg); }
+    @keyframes wave { from { transform: rotate(-165deg); } to { transform: rotate(-120deg); } }
+
+    .dance .rig   { animation: dance 0.5s ease-in-out infinite alternate; }
+    .dance .arm-l { animation: armsUp 0.25s ease-in-out infinite alternate; }
+    .dance .arm-r { animation: armsUp 0.25s ease-in-out infinite alternate-reverse; }
+    .dance .head  { animation: tilt 0.5s ease-in-out infinite alternate; }
+    @keyframes dance  { from { transform: rotate(-7deg) translateY(0); } to { transform: rotate(7deg) translateY(-4px); } }
+    @keyframes armsUp { from { transform: rotate(60deg); } to { transform: rotate(-60deg); } }
+    @keyframes tilt   { from { transform: rotate(8deg); } to { transform: rotate(-8deg); } }
+
+    .look .head { transform: rotate(10deg); }
+    .look2 .head { transform: rotate(-10deg); }
+
+    .bubble {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translate(-50%, 6px) scale(0.9);
+      padding: 6px 11px;
+      background: #fff;
+      color: #12204a;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .bubble::after {
+      content: "";
+      position: absolute;
+      top: 100%; left: 50%;
+      margin-left: -5px;
+      border: 5px solid transparent;
+      border-top-color: #fff;
+    }
+    .bubble.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+    .heart {
+      position: absolute;
+      left: 50%; top: 0;
+      color: #ff7ab8;
+      font-size: 16px;
+      pointer-events: none;
+      animation: heart 1s ease-out forwards;
+    }
+    @keyframes heart { to { transform: translate(var(--dx), -60px) scale(1.4); opacity: 0; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bot *, .bot { animation: none !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
   <header>
     <div class="wrap">
-      <a class="logo" href="/"><span class="logo-mark">d</span>duesify</a>
-      <span class="status">Coming soon</span>
+      <a class="logo" href="/"><img src="favicon.svg" alt="">duesify</a>
+      <span class="status">Portfolio coming soon</span>
     </div>
   </header>
 
   <main>
     <div class="wrap">
       <section class="hero">
-        <p class="eyebrow">Portfolio</p>
-        <h1>My work is almost ready to share.</h1>
-        <p class="lead">I'm putting my projects together in one place. Leave your email and I'll let you know when the site is live.</p>
+        <h1 data-platform>My portfolio is <span>almost ready.</span></h1>
+        <p class="lead">I'm putting my projects together in one place. Leave your email and I'll let you know when it's live.</p>
 
         <form name="notify" method="POST" data-netlify="true" netlify-honeypot="bot-field" action="/thanks.html">
           <input type="hidden" name="form-name" value="notify">
@@ -171,16 +308,84 @@
         </form>
         <p class="hint">One email when it launches. Nothing else.</p>
       </section>
+
+      <section class="cards" aria-label="What's coming">
+        <article class="card" data-platform>
+          <div class="card-top"><span>01</span><span class="tag">Soon</span></div>
+          <h2>Projects</h2>
+          <p>Things I've designed and built.</p>
+        </article>
+        <article class="card" data-platform>
+          <div class="card-top"><span>02</span><span class="tag">Soon</span></div>
+          <h2>About</h2>
+          <p>Who I am and what I do.</p>
+        </article>
+        <article class="card" data-platform>
+          <div class="card-top"><span>03</span><span class="tag">Soon</span></div>
+          <h2>Contact</h2>
+          <p>Ways to get in touch.</p>
+        </article>
+      </section>
     </div>
   </main>
 
-  <footer>
+  <footer data-platform data-ground>
     <div class="wrap">
       <span>&copy; <span id="year">2026</span> Duesify</span>
       <span>duesify.com</span>
     </div>
   </footer>
 
+  <div class="bot" id="bot" role="img" aria-label="A small robot walking around the page">
+    <div class="bubble"></div>
+    <div class="dir">
+      <div class="spin">
+        <svg viewBox="0 0 100 124" aria-hidden="true">
+          <g class="rig">
+            <g class="leg-l">
+              <rect x="37" y="94" width="10" height="18" rx="4" fill="#dfe6fb"/>
+              <ellipse cx="41" cy="115" rx="8" ry="5" fill="#22306a"/>
+            </g>
+            <g class="leg-r">
+              <rect x="53" y="94" width="10" height="18" rx="4" fill="#dfe6fb"/>
+              <ellipse cx="59" cy="115" rx="8" ry="5" fill="#22306a"/>
+            </g>
+            <g class="arm-l">
+              <circle cx="32" cy="74" r="6" fill="#22306a"/>
+              <ellipse cx="27" cy="85" rx="6.5" ry="10" fill="#e4eafb"/>
+            </g>
+            <g class="arm-r">
+              <circle cx="68" cy="74" r="6" fill="#22306a"/>
+              <ellipse cx="73" cy="85" rx="6.5" ry="10" fill="#e4eafb"/>
+            </g>
+            <rect x="31" y="67" width="38" height="33" rx="14" fill="#e4eafb"/>
+            <path d="M33 92 Q50 101 67 92 L67 96 Q50 104 33 96Z" fill="#c9d4f5"/>
+            <circle cx="50" cy="83" r="6.5" fill="#17204a"/>
+            <circle cx="50" cy="83" r="4" fill="#7de3f5"/>
+            <rect x="43" y="62" width="14" height="7" rx="2" fill="#22306a"/>
+            <g class="head">
+              <ellipse cx="14" cy="38" rx="8" ry="12" fill="#22306a"/>
+              <ellipse cx="11" cy="38" rx="3.5" ry="7.5" fill="none" stroke="#7de3f5" stroke-width="2.4"/>
+              <ellipse cx="86" cy="38" rx="8" ry="12" fill="#22306a"/>
+              <ellipse cx="89" cy="38" rx="3.5" ry="7.5" fill="none" stroke="#7de3f5" stroke-width="2.4"/>
+              <rect x="16" y="6" width="68" height="58" rx="27" fill="#e4eafb"/>
+              <path d="M18 52 Q50 70 82 52 L82 50 Q78 64 50 64 Q22 64 18 50Z" fill="#c9d4f5"/>
+              <path d="M33 9 Q50 3 67 9 Q61 18 50 18 Q39 18 33 9Z" fill="#3b5a9a"/>
+              <rect x="23" y="22" width="54" height="32" rx="15" fill="#17204a"/>
+              <ellipse cx="30" cy="29" rx="3" ry="5" fill="#fff" opacity="0.22" transform="rotate(30 30 29)"/>
+              <g class="eyes">
+                <circle class="eye" cx="39" cy="38" r="6" fill="#7de3f5"/>
+                <circle class="eye" cx="61" cy="38" r="6" fill="#7de3f5"/>
+                <path d="M45.5 46 Q50 50.5 54.5 46" fill="none" stroke="#7de3f5" stroke-width="2" stroke-linecap="round"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
   <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  <script src="robot.js"></script>
 </body>
 </html>
