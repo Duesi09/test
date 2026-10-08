@@ -402,6 +402,16 @@
     }
   }
 
+  // The word the robot lands on dips under its weight and springs back.
+  function squishWord(amount = 1) {
+    word.animate([
+      { transform: 'translateY(0) scaleY(1)' },
+      { transform: `translateY(${5 * amount}px) scaleY(${1 - 0.04 * amount})` },
+      { transform: `translateY(${-1.5 * amount}px) scaleY(1)` },
+      { transform: 'translateY(0) scaleY(1)' },
+    ], { duration: 380, easing: 'ease-out', composite: 'add' });
+  }
+
   function skidDust() {
     const dir = flip ? 1 : -1;                          // dust kicks up behind the feet
     for (let i = 0; i < 6; i++) {
@@ -624,6 +634,7 @@
     happy = true;
     say('sparkles', 150, 1300);
     play('Jump', { rate: 1.3 });
+    setTimeout(() => squishWord(0.7), duration('Jump', 1.3) * 40 / 48);
     await sleep(duration('Jump', 1.3));
     happy = false;
     play('Idle');
@@ -664,6 +675,7 @@
     }
     ground = landY;
     override = null;
+    squishWord(1);
     say('sparkles', 150, 1100);
     await sleep(duration('Jump') * 8 / 48 + 200);
     play('Idle');
