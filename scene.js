@@ -806,6 +806,13 @@
     const portalAt = [];                                 // portal element per spot index
     const entry = { x: x + 48 * scale, y: ground };
     const spots2 = [entry, ...jobs.map(j => ({ x: j.x + (j.left ? 1 : -1) * 34 * scale, y: j.y }))];
+    // a few wild shots first, all over the place
+    for (let i = 0; i < 4; i++) {
+      const tx = rand(0.1, 0.9) * vw, ty = rand(0.06, 0.35) * vh;
+      const tip = aimAt(tx, ty);
+      fireAt(tip.x, tip.y, tx, ty, i % 2 ? 'orange' : 'cyan').then(() => sparks(tx, ty));
+      await sleep(120);
+    }
     for (let i = 0; i < spots2.length; i++) {
       const sp = spots2[i];
       const tip = aimAt(sp.x, sp.y - ph / 2);
