@@ -1484,12 +1484,12 @@
       },
     },
     // Fortnite-style "Wavy T": arms out in a T, a wave rolls from one hand, through the body,
-    // out the other hand, then back. On the spot.
+    // and out the other hand, over and over. On the spot, seamless loop.
     WavyT: {
       frames: 64, fps: 16, loop: true,
       pose(f) {
         const w = TAU * f / 16;
-        const dir = f < 32 ? 1 : -1;                         // wave goes left->right, then right->left
+        const dir = 1;                                         // wave always rolls the same way, so the loop never jumps
         const r = pos => 30 * Math.sin(w - dir * 1.05 * pos);   // how far each joint is lifted
         const k = {
           front: 1, eyes: 'happy', mouth: 'grin',

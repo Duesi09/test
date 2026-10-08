@@ -10,7 +10,7 @@ lands like a superhero, gets an idea, puts on a hard hat, shoots one portal next
 teleport-builds wooden boards onto the letters (one of 10 layouts, picked at random per visit).
 Then it does the Wavy T emote on the spot, forever.
 
-- Click the robot to make it Floss, Dab or dance.
+- Click the robot during the story to make it Floss, Dab or dance. The final Wavy T never stops.
 - Hover it and it smiles at you.
 - Add `?layout=1` … `?layout=10` to the URL to see a specific board layout.
 - With "reduce motion" turned on, it just stands and breathes.

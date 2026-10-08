@@ -67,8 +67,11 @@
 
   // ---------- Layout ----------
   function lineOf(el) {
-    const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
+    // Measure where the word sits at rest, not mid rise-in animation (that shifts it down).
+    const b0 = el.getBoundingClientRect();
+    const ty = cs.transform && cs.transform !== 'none' ? new DOMMatrixReadOnly(cs.transform).m42 : 0;
+    const r = { left: b0.left, right: b0.right, height: b0.height, top: b0.top - ty };
     measure.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     const m = measure.measureText('H');
     const fs = parseFloat(cs.fontSize);
@@ -969,15 +972,10 @@
     await sleep(700);
     await story();
 
-    // All done: the Wavy T emote on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
-    // after which it goes straight back to it.
+    // All done: the Wavy T emote on the spot, forever. Nothing interrupts it.
     face(false);
+    canDance = false;
     play('WavyT');
-    canDance = true;
-    for (;;) {
-      await wait(500);
-      if (clip !== clips.WavyT && !dancing) play('WavyT');
-    }
   }
 
   addEventListener('click', e => { if (hit(e.clientX, e.clientY)) clicked = true; });
