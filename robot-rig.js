@@ -986,10 +986,11 @@
         const beat = Math.abs(Math.sin(Math.PI * f / 4));
         if (f >= 16 && f < 32) { k.y = (k.y || 0) - 10 * beat; k.sy = 1 + 0.06 * (1 - beat) - 0.03; }
         else if (f < 16 || (f >= 64 && f < 80)) { k.y = (k.y || 0) - 3 * beat; }
-        if (f >= 49 && f < 64) { const c = Math.cos(Math.PI * 2 * (f - 48) / 16); k.spin = Math.sign(c || 1) * Math.max(0.35, Math.abs(c)); }
+        if (f >= 49 && f < 64) { const c = Math.cos(Math.PI * 2 * (f - 48) / 16); k.spin = Math.sign(c || 1) * Math.max(0.55, Math.abs(c)); }
         k.eyes = f >= 84 && f < 92 ? (f >= 86 && f < 90 ? 'wink' : 'happy') : f >= 16 && f < 32 ? 'happy' : 'normal';
         k.phone = 2 * Math.sin(Math.PI * f / 4);
         k.blink = blinkAt(f, 40, 3);
+        k.front = f >= 49 && f < 64 ? 0 : 0.9;                // dances for the viewer (the spin turns away)
         const notes = [];
         for (let i = 0; i < 3; i++) {
           const t = ((f / 96) * 3 + i / 3) % 1;

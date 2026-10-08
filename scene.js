@@ -275,10 +275,12 @@
     clicked = false;
     if (!canDance) return false;
     const prev = { clip, rate, override };
-    play(Math.random() < 0.6 ? 'Floss' : 'Dab');
+    const r = Math.random();
+    const move = r < 0.45 ? 'Floss' : r < 0.8 ? 'Dab' : 'Dance';
+    play(move);
     dancing = true;
     say('sparkles', 100, 1200);
-    await sleep(3600);
+    await sleep(move === 'Dance' ? duration('Dance') * 0.75 : 3600);
     dancing = false;
     play(Object.keys(clips).find(k => clips[k] === prev.clip), { rate: prev.rate, mod: prev.override });
     return true;
