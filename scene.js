@@ -843,6 +843,9 @@
       for (let k = 0; k < 3; k++) {
         await sleep(hit);
         sparks(j.plank.x, j.plank.y);
+        (n < 2 ? word : soon).animate(
+          [{ transform: 'translate(0, 0)' }, { transform: `translate(${j.left ? -1.5 : 1.5}px, 2.5px)` }, { transform: 'translate(0, 0)' }],
+          { duration: 110, easing: 'ease-out', composite: 'add' });
         await sleep(duration('Hammer', 1.5) - hit);
       }
       play('Idle');
