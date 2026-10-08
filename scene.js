@@ -84,7 +84,7 @@
       top: { l: c.l + pad, r: c.r - pad, y: c.top, home: (c.l + c.r) / 2 },
       edge: Math.max(c.r, s.r),
       // Hidden pool: clear of every letter, level with the bottom line.
-      pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 30 * scale), y: s.base },
+      pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 48), y: s.base },
       // Standing spot at the bottom, just right of the N in SOON.
       bottom: { x: s.r + 72 * scale, y: s.base },
       n: { x: s.r - 0.12 * (s.base - s.top), top: s.top, base: s.base },
@@ -433,7 +433,7 @@
     for (;;) {
       vx = (apexX - x0) / Math.sqrt(2 * H / gj);
       entryX = apexX + vx * Math.sqrt(2 * (H + pool.y - y0) / gj);
-      if (entryX < vw - 30 * scale || H > 300 * scale) break;
+      if (entryX < vw - 48 || H > 340 * scale) break;
       H += 10 * scale;                                   // narrow screens: jump higher, travel less
     }
     const vy = Math.sqrt(2 * gj * H);
