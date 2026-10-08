@@ -751,7 +751,9 @@
             return { hip: lerp(-A, A, t), knee: 46 * Math.sin(Math.PI * q / 0.3), foot: 12 * Math.sin(Math.PI * q / 0.3) };
           }
           const t = (q - 0.3) / 0.7;
-          return { hip: lerp(A, -A, t), knee: 4, foot: t > 0.85 ? -10 * (t - 0.85) / 0.15 : 0 };
+          // heel strike (toes up) -> flat -> push off the toes
+          const foot = t < 0.12 ? 14 * (1 - t / 0.12) : t > 0.8 ? -16 * (t - 0.8) / 0.2 : 0;
+          return { hip: lerp(A, -A, t), knee: t < 0.15 ? 10 * (1 - t / 0.15) + 4 : 4, foot };
         };
         const L = legAt(p), R = legAt((p + 0.5) % 1);
         const swing = Math.cos(TAU * (p - 0.27));
@@ -760,9 +762,10 @@
           hipB: R.hip, kneeB: R.knee, footB: R.foot,
           armB: 32 * swing, armF: -32 * swing, elbF: 18, elbB: 18,
           lean: 4,
-          y: -3 * Math.pow(Math.sin(TAU * (p - 0.15)), 2),
-          headRot: 6 * Math.sin(TAU * p) + 2,
-          headY: 2 * Math.cos(TAU * 2 * (p - 0.27)),
+          // body is highest mid-stride and dips as each foot lands; the head stays steady
+          y: -3.5 * Math.pow(Math.sin(TAU * (p - 0.3)), 2),
+          headRot: 2 * Math.sin(TAU * p) + 2,
+          headY: 1.2 * Math.cos(TAU * 2 * (p - 0.35)),
           mouth: 'smile',
           phone: 1.2 * Math.sin(TAU * 2 * p),
           blink: blinkAt(f, 30),

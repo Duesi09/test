@@ -13,6 +13,7 @@
   const CENTER = 90;                 // body centre height above the feet (rig units)
   const SPEED = 1.3;                 // global tempo: everything plays a bit faster
   const GRAVITY = 2600;              // rig units / s^2 (the robot is ~180 units tall)
+  const JUMP_G = 1500;               // gentler gravity for jumps and dives
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -24,6 +25,9 @@
   // ---------- State ----------
   let scale = 0.5, vw = 0, vh = 0;
   let x = 0, ground = 0, flip = false;   // feet position (page px)
+  let turnStart = -1e9;                  // facing changes play a quick body turn instead of snapping
+  const TURN_MS = 170;
+  const eyes = { look: 0, target: 0, nextLook: 0, nextBlink: 0, blinkAt: -1e9, mx: -1e4, my: -1e4, mt: -1e9 };
   let spinRot = 0;                       // extra whole-body rotation (deg) around the body centre
   let hasGun = false, happy = false;
   let portal = null;                     // {ax, ay, bx, by}: entry plane x = ax, exit through the ceiling at (bx, by)
@@ -47,6 +51,12 @@
   }
   const duration = (name, r = 1) => clips[name].frames / clips[name].fps / (r * SPEED) * 1000;
 
+  function face(left) {
+    if (left === flip) return;
+    flip = left;
+    turnStart = performance.now();
+  }
+
   // ---------- Layout ----------
   function lineOf(el) {
     const r = el.getBoundingClientRect();
@@ -66,6 +76,7 @@
     const pad = 34 * scale;
     return {
       top: { l: c.l + pad, r: c.r - pad, y: c.top, home: (c.l + c.r) / 2 },
+      edge: Math.max(c.r, s.r),
       // Hidden pool: clear of every letter, level with the bottom line.
       pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 30 * scale), y: s.base },
       // Standing spot at the bottom, just right of the N in SOON.
@@ -97,6 +108,7 @@
     leanFx += (leanTarget - leanFx) * 0.15;
     if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
     pose = followThrough(pose, now);
+    pose = liveEyes(pose, now);
     if (blendFrom) {
       const t = (now - blendStart) / BLEND_MS;
       if (t >= 1) blendFrom = null;
@@ -126,6 +138,24 @@
     });
   }
 
+  function liveEyes(pose, now) {
+    if (now > eyes.nextBlink) {
+      eyes.blinkAt = now;
+      eyes.nextBlink = now + (Math.random() < 0.2 ? 260 : rand(2200, 5200));   // sometimes a double blink
+    }
+    const cursorNear = now - eyes.mt < 2500 && Math.hypot(eyes.mx - x, eyes.my - (ground - 120 * scale)) < 380;
+    if (cursorNear) eyes.target = clamp((eyes.mx - x) / 160, -1, 1) * (flip ? -1 : 1);
+    else if (now > eyes.nextLook) {
+      eyes.target = Math.random() < 0.5 ? 0 : rand(-0.9, 0.9);
+      eyes.nextLook = now + rand(1200, 3500);
+    }
+    eyes.look += (eyes.target - eyes.look) * 0.12;
+    if (pose.eyes && pose.eyes !== 'normal') return pose;
+    const b = (now - eyes.blinkAt) / 140;
+    const blink = b < 1 ? Math.sin(Math.PI * b) : 0;
+    return Object.assign({}, pose, { blink: Math.max(pose.blink || 0, blink), look: (pose.look || 0) + eyes.look });
+  }
+
   function drawRobot(pose) {
     ctx.save();
     ctx.translate(x, ground);
@@ -134,7 +164,13 @@
       ctx.rotate(spinRot * Math.PI / 180);
       ctx.translate(0, CENTER * scale);
     }
-    draw(ctx, pose, { x: 0, y: 0, scale, flip });
+    const tt = (performance.now() - turnStart) / TURN_MS;
+    let shownFlip = flip;
+    if (tt < 1) {
+      if (tt < 0.5) shownFlip = !flip;
+      pose = Object.assign({}, pose, { spin: (pose.spin ?? 1) * Math.max(0.25, Math.abs(Math.cos(Math.PI * tt))) });
+    }
+    draw(ctx, pose, { x: 0, y: 0, scale, flip: shownFlip });
     ctx.restore();
   }
 
@@ -196,7 +232,7 @@
   // and leans into the acceleration like a real little body would.
   async function walk(tx, run, speedMul = 1, stopAtEnd = true) {
     if (Math.abs(tx - x) < 2) return;
-    flip = tx < x;
+    face(tx < x);
     const clipRate = run ? 2 : 2;
     const restart = () => play(run ? 'Run' : 'Walk', { rate: clipRate });
     restart();
@@ -237,12 +273,6 @@
     await sleep(duration(name, r));
     override = null;
   }
-
-  const arc = (x0, y0, x1, y1, lift) => {
-    const peak = Math.min(y0, y1) - lift;
-    const cx = (x0 + x1) / 2, cy = 2 * peak - (y0 + y1) / 2;
-    return t => ({ x: (1 - t) * (1 - t) * x0 + 2 * (1 - t) * t * cx + t * t * x1, y: (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * cy + t * t * y1 });
-  };
 
   function drop(px, py, size, color, keyframes, ms) {
     const d = document.createElement('span');
@@ -331,42 +361,56 @@
 
     // 1. Three goofy steps to the right, then wave at the camera
     await walk(Math.min(s.top.r, x + 62 * scale), false);
-    flip = false;
+    face(false);
     play('Wave');
     await wait(2600);
     play('Idle');
     await wait(400);
 
     // 2. Run to the edge and backflip off the letters into the hidden pool.
-    //    Up and out past the last letter first, then straight down, so it never crosses a letter.
+    //    A real gravity arc whose peak is already past the last letter, so it never touches one.
     s = spots();
     await walk(s.top.r, true);
     canDance = false;
     const pool = s.pool, x0 = x, y0 = ground;
+    const gj = JUMP_G * scale;
     const bottomY = pool.y + 175 * scale;
+    const apexX = Math.max(x0 + 40 * scale, s.edge + 60 * scale);
+    let H = 70 * scale, vx, entryX;
+    for (;;) {
+      vx = (apexX - x0) / Math.sqrt(2 * H / gj);
+      entryX = apexX + vx * Math.sqrt(2 * (H + pool.y - y0) / gj);
+      if (entryX < vw - 30 * scale || H > 300 * scale) break;
+      H += 10 * scale;                                   // narrow screens: jump higher, travel less
+    }
+    const vy = Math.sqrt(2 * gj * H);
+    const Tdive = (vy + Math.sqrt(vy * vy + 2 * gj * (bottomY - y0))) / gj;
     let splashed = false;
     clipRect = { maxY: pool.y };
     await fly('Cannonball', t => {
-      if (t < 0.45) {
-        const u = t / 0.45;
-        return { x: x0 + (pool.x - x0) * (1 - (1 - u) * (1 - u)), y: y0 - 80 * scale * Math.sin(Math.PI * u) - 10 * scale * u };
-      }
-      const u = (t - 0.45) / 0.55;
-      return { x: pool.x, y: y0 - 10 * scale + (bottomY - y0 + 10 * scale) * u * u };
-    }, 6, 47, 1.2, () => {
-      if (!splashed && ground > pool.y - 20 * scale && ground > y0 + 30 * scale) {
+      const tau = t * Tdive;
+      return { x: x0 + vx * tau, y: y0 - vy * tau + 0.5 * gj * tau * tau };
+    }, 6, 47, 41 / (16 * SPEED * Tdive), () => {
+      if (!splashed && ground > pool.y - 15 * scale && ground > y0 + 30 * scale) {
         splashed = true;
-        splash(pool.x, pool.y, 22, 1.2);
+        splash(x, pool.y, 22, 1.2);
       }
     });
-    await bubbles(pool.x, pool.y, 1700);
+    await bubbles(entryX, pool.y, 1700);
 
     // 3. Jump out of the water, landing at the bottom next to the N
     s = spots();
-    flip = true;
+    face(true);
     let popped = false;
-    await fly('Jump', arc(pool.x, bottomY, s.bottom.x, s.bottom.y, 40 * scale), 8, 40, 1.35, t => {
-      if (!popped && ground < pool.y + 30 * scale) { popped = true; splash(pool.x, pool.y, 18, 1); }
+    const apexY = s.bottom.y - 45 * scale;
+    const vUp = Math.sqrt(2 * gj * (bottomY - apexY));
+    const Tout = vUp / gj + Math.sqrt(2 * (s.bottom.y - apexY) / gj);
+    const vxOut = (s.bottom.x - entryX) / Tout;
+    await fly('Jump', t => {
+      const tau = t * Tout;
+      return { x: entryX + vxOut * tau, y: bottomY - vUp * tau + 0.5 * gj * tau * tau };
+    }, 8, 40, 32 / (16 * SPEED * Tout), t => {
+      if (!popped && ground < pool.y + 30 * scale) { popped = true; splash(x, pool.y, 18, 1); }
       if (t > 0.7) clipRect = null;
     });
     clipRect = null;
@@ -380,7 +424,7 @@
 
     // 4. Bonk! A portal gun falls from the sky
     canDance = false;
-    flip = false;
+    face(false);
     play('FindGun');
     await sleep(duration('FindGun'));
     hasGun = true;
@@ -388,7 +432,7 @@
     await sleep(400);
 
     // 5. Portal on the N, portal on the ceiling
-    flip = true;
+    face(true);
     s = spots();
     const nH = s.n.base - s.n.top;
     const ph = Math.max(nH * 1.05, 150 * scale), pw = ph * 0.34;
@@ -456,7 +500,7 @@
     // 8. Superhero landing, then a happy jump
     play('SuperheroLanding');
     await sleep(duration('SuperheroLanding') * 0.8);
-    flip = false;
+    face(false);
     happy = true;
     play('Jump', { rate: 1.3 });
     await sleep(duration('Jump', 1.3));
@@ -489,7 +533,10 @@
   }
 
   addEventListener('click', e => { if (hit(e.clientX, e.clientY)) clicked = true; });
-  addEventListener('pointermove', e => { document.body.style.cursor = hit(e.clientX, e.clientY) ? 'pointer' : ''; });
+  addEventListener('pointermove', e => {
+    document.body.style.cursor = hit(e.clientX, e.clientY) ? 'pointer' : '';
+    eyes.mx = e.clientX; eyes.my = e.clientY; eyes.mt = performance.now();
+  });
   addEventListener('resize', () => {
     resize();
     if (!override && !clipRect && !portal && !spinRot) {
