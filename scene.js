@@ -419,8 +419,16 @@
     shot.style.left = `${sx}px`;
     shot.style.top = `${sy}px`;
     document.body.appendChild(shot);
-    await shot.animate([{ transform: 'translate(0, 0)' }, { transform: `translate(${px - sx}px, ${py - sy}px)` }],
-      { duration: 360, easing: 'ease-in', fill: 'forwards' }).finished;
+    const anim = shot.animate([{ transform: 'translate(0, 0)' }, { transform: `translate(${px - sx}px, ${py - sy}px)` }],
+      { duration: 360, easing: 'ease-in', fill: 'forwards' });
+    // glowing trail behind the shot
+    const trail = setInterval(() => {
+      const t = Math.min(1, (anim.currentTime || 0) / 360), k = t * t;
+      drop(sx + (px - sx) * k, sy + (py - sy) * k, rand(4, 8), `rgb(${c})`,
+        [{ transform: 'scale(1)', opacity: 0.8 }, { transform: 'scale(0.2)', opacity: 0 }], 320);
+    }, 22);
+    await anim.finished;
+    clearInterval(trail);
     shot.remove();
   }
 
