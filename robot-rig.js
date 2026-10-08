@@ -23,7 +23,7 @@
     shadow: 'rgba(118, 140, 205, 0.32)',
     fx: '#79d8ff',
   };
-  const LW = 2.7;              // outline width
+  const LW = 3;              // outline width
   const HIP_Y = -36;           // hip joint height
   const THIGH = 13, SHIN = 13; // leg segments
   const UPPER = 11, FORE = 13; // arm segments
@@ -413,7 +413,7 @@
     // far ear cup peeks out behind the head
     outlined(ctx, () => { ctx.beginPath(); ctx.ellipse(57, cy + 3 + p.phone * 0.5, 10, 22, 0, 0, Math.PI * 2); }, COL.navyBack);
 
-    const head = () => squircle(ctx, 0, cy, 63, 52, 2.35);
+    const head = () => squircle(ctx, 0, cy, 63, 54, 2.15);
     head();
     ctx.lineJoin = 'round';
     ctx.strokeStyle = COL.out;
@@ -424,7 +424,7 @@
     ctx.clip();
     ctx.fillStyle = COL.shade;
     ctx.fillRect(-70, cy - 60, 140, 120);
-    squircle(ctx, 5, cy - 4, 61, 49, 2.35);
+    squircle(ctx, 5, cy - 4, 61, 51, 2.15);
     ctx.fillStyle = COL.body;
     ctx.fill();
     // headband over the top
@@ -440,14 +440,14 @@
     ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-30, cy + 38); ctx.quadraticCurveTo(-42, cy + 10, -34, cy - 16); ctx.stroke();
     // visor
-    rrect(ctx, -24, cy - 25, 84, 50, 23);
+    rrect(ctx, -27, cy - 27, 91, 54, 25);
     ctx.fillStyle = COL.visor;
     ctx.fill();
     ctx.restore();
 
     // visor shine
     ctx.save();
-    rrect(ctx, -24, cy - 25, 84, 50, 23);
+    rrect(ctx, -27, cy - 27, 91, 54, 25);
     ctx.clip();
     ctx.strokeStyle = 'rgba(255,255,255,0.08)';
     ctx.lineWidth = 5;
@@ -625,6 +625,17 @@
             ctx.closePath();
             ctx.fill();
             ctx.restore();
+          }
+          break;
+        }
+        case 'uplines': {
+          ctx.lineWidth = 2.6;
+          ctx.globalAlpha = (e.a ?? 1) * 0.85;
+          for (const [dx, len] of [[-14, 16], [0, 22], [14, 14]]) {
+            ctx.beginPath();
+            ctx.moveTo(e.x + dx, e.y + 6);
+            ctx.lineTo(e.x + dx, e.y + 6 + len);
+            ctx.stroke();
           }
           break;
         }
@@ -861,11 +872,11 @@
         const k = keys([
           [0, { y: 0, sy: 1, sx: 1, hipF: 0, hipB: 0, kneeF: 0, kneeB: 0, armF: -18, armB: 12, elbF: 8, elbB: 8, lean: 0, headRot: 0 }],
           [7, { y: 0, sy: 0.84, sx: 1.1, hipF: 32, hipB: 30, kneeF: 66, kneeB: 64, armF: -40, armB: -50, elbF: 20, elbB: 20, lean: 14, headRot: 6 }],
-          [12, { y: -38, sy: 1.16, sx: 0.9, hipF: -6, hipB: -10, kneeF: 6, kneeB: 4, armF: 150, armB: 140, elbF: 10, elbB: 10, lean: -4, headRot: -6 }],
-          [20, { y: -86, sy: 1.04, sx: 0.97, hipF: 24, hipB: 8, kneeF: 50, kneeB: 30, armF: 110, armB: 100, elbF: 6, elbB: 6, lean: 0, headRot: -4 }],
-          [28, { y: -100, sy: 1, sx: 1, hipF: 30, hipB: 14, kneeF: 56, kneeB: 36, armF: 100, armB: 92, lean: 0, headRot: 2 }],
+          [12, { y: -38, sy: 1.16, sx: 0.9, hipF: -6, hipB: -10, kneeF: 6, kneeB: 4, armF: -150, armB: 140, elbF: 10, elbB: 10, lean: -4, headRot: -6 }],
+          [20, { y: -86, sy: 1.04, sx: 0.97, hipF: 24, hipB: 8, kneeF: 50, kneeB: 30, armF: -125, armB: 105, elbF: 6, elbB: 6, lean: 0, headRot: -4 }],
+          [28, { y: -100, sy: 1, sx: 1, hipF: 30, hipB: 14, kneeF: 56, kneeB: 36, armF: -115, armB: 98, lean: 0, headRot: 2 }],
           [32, { y: -96, sy: 1, sx: 1 }],
-          [39, { y: -22, sy: 1.1, sx: 0.94, hipF: 4, hipB: 2, kneeF: 6, kneeB: 6, armF: 140, armB: 132, elbF: 8, elbB: 8, lean: -2, headRot: -2 }],
+          [39, { y: -22, sy: 1.1, sx: 0.94, hipF: 4, hipB: 2, kneeF: 6, kneeB: 6, armF: -140, armB: 132, elbF: 8, elbB: 8, lean: -2, headRot: -2 }],
           [41, { y: 0, sy: 0.8, sx: 1.16, hipF: 30, hipB: 28, kneeF: 60, kneeB: 58, armF: 40, armB: 30, elbF: 30, elbB: 30, lean: 12, headRot: 8 }],
           [44, { y: 0, sy: 1.05, sx: 0.97, hipF: 6, hipB: 6, kneeF: 10, kneeB: 10, armF: 10, armB: -4, lean: -2, headRot: -3 }],
           [47, { y: 0, sy: 1, sx: 1, hipF: 0, hipB: 0, kneeF: 0, kneeB: 0, armF: -18, armB: 12, elbF: 8, elbB: 8, lean: 0, headRot: 0 }],
@@ -875,6 +886,7 @@
         k.fx = [];
         if (f >= 40 && f <= 47) k.fx.push({ type: 'dust', x: 0, t: (f - 40) / 7 });
         if (f >= 8 && f <= 13) k.fx.push({ type: 'dust', x: 0, t: (f - 8) / 5, a: 0.6 });
+        if (f >= 11 && f <= 24) k.fx.push({ type: 'uplines', x: 0, y: k.y, a: 1 - Math.abs(f - 16) / 9 });
         return k;
       },
     },
