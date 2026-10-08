@@ -30,6 +30,9 @@
   let clipRect = null;                   // {maxY} hides everything below a line (the hidden pool)
   let canDance = false, clicked = false;
   let leanFx = 0, leanTarget = 0;     // extra lean from speeding up / slowing down
+  // Follow-through: a small damped spring the head and headphones ride on, driven by the
+  // body's acceleration, so they lag, overshoot and settle like they have real weight.
+  const jig = { x: 0, vx: 0, y: 0, vy: 0, px: 0, py: 0, pvx: 0, pvy: 0, t: 0 };
 
   let clip = clips.Idle, clipStart = 0, rate = 1, override = null;
   let lastPose = clip.pose(0), blendFrom = null, blendStart = 0;
@@ -93,12 +96,34 @@
     if (happy) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin' });
     leanFx += (leanTarget - leanFx) * 0.15;
     if (Math.abs(leanFx) > 0.05) pose = Object.assign({}, pose, { lean: (pose.lean || 0) + leanFx });
+    pose = followThrough(pose, now);
     if (blendFrom) {
       const t = (now - blendStart) / BLEND_MS;
       if (t >= 1) blendFrom = null;
       else pose = blend(blendFrom, pose, ease(t));
     }
     return (lastPose = pose);
+  }
+
+  function followThrough(pose, now) {
+    const dt = Math.min(0.05, (now - (jig.t || now)) / 1000) || 1 / 60;
+    jig.t = now;
+    if (portal || spinRot) { jig.px = x; jig.py = ground; jig.pvx = jig.pvy = 0; return pose; }
+    const vx = (x - jig.px) / dt, vy = (ground - jig.py) / dt;
+    const ax = (vx - jig.pvx) / dt, ay = (vy - jig.pvy) / dt;
+    jig.px = x; jig.py = ground; jig.pvx = vx; jig.pvy = vy;
+    const K = 170, D = 11;                               // stiffness, damping
+    const sx = scale || 1;
+    jig.vx += (-K * jig.x - D * jig.vx - clamp(ax / sx, -6000, 6000) * 0.012) * dt;
+    jig.vy += (-K * jig.y - D * jig.vy + clamp(ay / sx, -9000, 9000) * 0.0016) * dt;
+    jig.x += jig.vx * dt;
+    jig.y += jig.vy * dt;
+    const dir = flip ? -1 : 1;
+    return Object.assign({}, pose, {
+      headRot: (pose.headRot || 0) + clamp(jig.x, -14, 14) * dir,
+      headY: (pose.headY || 0) + clamp(jig.y, -6, 8),
+      phone: (pose.phone || 0) + clamp(jig.y * 0.8 + Math.abs(jig.x) * 0.15, -5, 6),
+    });
   }
 
   function drawRobot(pose) {
@@ -411,13 +436,15 @@
     s = spots();
     const end = { x: home, y: s.top.y };
     const x1 = x, y1 = ground;
-    const T = (-v + Math.sqrt(v * v + 2 * g * (end.y - y1))) / g;   // time to reach the letters
+    const gf = g * 0.42;                                   // floatier, cartoon fall
+    v = Math.min(v, 160 * scale);
+    const T = (-v + Math.sqrt(v * v + 2 * gf * (end.y - y1))) / gf;  // time to reach the letters
     const t0 = performance.now();
     for (;;) {
       const t = Math.min(T, (performance.now() - t0) / 1000);
       const k = t / T;
       x = x1 + (end.x - x1) * ease(k);
-      ground = y1 + v * t + 0.5 * g * t * t;
+      ground = y1 + v * t + 0.5 * gf * t * t;
       spinRot = -90 - 630 * k;                             // keeps spinning the same way, ends upright
       if (t >= T) break;
       await frame();

@@ -354,7 +354,7 @@
         oval(e2, 6.5, 10 * blinkY);
     }
     ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255, 128, 176, 0.55)';
+    ctx.fillStyle = 'rgba(255, 128, 176, 0.28)';
     ctx.beginPath(); ctx.ellipse(e1.x - 6, e1.y + 12, 6.5, 3.6, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(e2.x + 6, e2.y + 12, 5.5, 3.4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = COL.cyan;
