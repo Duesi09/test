@@ -1377,6 +1377,44 @@
         return k;
       },
     },
+
+    // The Griddy, danced on the spot: alternating heel taps, arms pumping back and forth,
+    // and every other bar the hands come up as "goggles" around the eyes. No travelling.
+    Griddy: {
+      frames: 64, fps: 16, loop: true,
+      pose(f) {
+        const beat = (f % 8) / 8;
+        const lead = Math.floor(f / 8) % 2 ? -1 : 1;       // which heel taps forward
+        const tap = Math.sin(Math.PI * beat);
+        const bob = Math.pow(tap, 1.4);
+        const goggles = f >= 32;
+        const swing = Math.sin(TAU * f / 16);
+        const k = {
+          front: 0.9,
+          x: 0,
+          y: -3 * bob,
+          sy: 1 - 0.04 * (1 - bob),
+          lean: 9 + 3 * bob,
+          // heel tap: the leading leg kicks forward, heel down, toes up; the other leg bends
+          hipF: lead > 0 ? 26 * tap : -6, kneeF: lead > 0 ? 2 : 24 * tap + 8, footF: lead > 0 ? 26 * tap : 0,
+          hipB: lead < 0 ? 26 * tap : -6, kneeB: lead < 0 ? 2 : 24 * tap + 8, footB: lead < 0 ? 26 * tap : 0,
+          headRot: 5 * swing, headY: 2 * bob,
+          phone: 2.5 * bob,
+          eyes: 'determined', mouth: 'grin',
+          fx: [],
+        };
+        if (goggles) {
+          // hands up around the eyes, little pulses with the beat
+          Object.assign(k, { armF: 168 - 8 * bob, elbF: 62, armB: -168 + 8 * bob, elbB: -62, eyes: 'happy', headRot: 2 * swing });
+        } else {
+          // arms pump back and forth, opposite to each other
+          const up = 0.5 + 0.5 * swing;
+          Object.assign(k, { armF: -18 - 55 * up, elbF: -55, armB: 18 + 55 * (1 - up), elbB: 55 });
+        }
+        if (f % 8 === 3) k.fx.push({ type: 'dust', x: lead > 0 ? -18 : 18, t: 0.35, a: 0.45 });
+        return k;
+      },
+    },
   };
 
   // Blend two poses (numeric params interpolate, the rest switch halfway).

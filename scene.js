@@ -666,17 +666,43 @@
   }
 
   // ---------- Finale: idea, hard hat, portal barrage, teleporting speed-build ----------
+  // Screen box of every letter in a word (works with the CSS uppercase transform).
+  function letterBoxes(el) {
+    const node = el.firstChild, out = [];
+    const range = document.createRange();
+    for (let i = 0; i < node.length; i++) {
+      range.setStart(node, i);
+      range.setEnd(node, i + 1);
+      const r = range.getBoundingClientRect();
+      if (r.width > 0) out.push({ l: r.left, r: r.right, cx: (r.left + r.right) / 2 });
+    }
+    return out;
+  }
+
+  // Each visit gets its own construction job: 2 random letters in COMING and 2 in SOON,
+  // each covered by a board at a random steep angle across the middle of the letter.
   function buildJobs() {
     const s = spots(), c = s.coming, o = s.soon;
-    const hc = c.base - c.top, ho = o.base - o.top;
-    return [
-      // where it stands, which way it faces, and the board it nails up
-      // board positions measured from the hand-drawn layout: steep diagonals across C, G, S and N
-      { x: c.l + 0.95 * hc, y: c.top, left: true, plank: { x: c.l + 0.375 * hc, y: c.top + 0.42 * hc, w: 1.23 * hc, rot: -56 } },
-      { x: c.r - 1.0 * hc, y: c.top, left: false, plank: { x: c.r - 0.48 * hc, y: c.top + 0.56 * hc, w: 1.12 * hc, rot: 57 } },
-      { x: Math.max(30 * scale, o.l - 48 * scale), y: o.base, left: false, plank: { x: o.l + 0.32 * ho, y: o.top + 0.55 * ho, w: 1.18 * ho, rot: -60 } },
-      { x: s.bottom.x - 50 * scale, y: o.base, left: true, plank: { x: o.r - 0.46 * ho, y: o.top + 0.4 * ho, w: 1.18 * ho, rot: 53 } },
-    ];
+    const pick = (arr, n) => arr.map(v => [Math.random(), v]).sort((a, b) => a[0] - b[0]).slice(0, n).map(v => v[1]).sort((a, b) => a.cx - b.cx);
+    const board = (L, top, base) => {
+      const h = base - top;
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      return { x: L.cx + rand(-0.08, 0.08) * h, y: top + rand(0.42, 0.58) * h, w: rand(1.05, 1.25) * h, rot: sign * rand(38, 64) };
+    };
+    const jobs = [];
+    // COMING: stands on top of the word, right next to the letter
+    for (const L of pick(letterBoxes(word), 2)) {
+      const side = L.cx < (c.l + c.r) / 2 ? 1 : -1;               // stand on the side towards the middle
+      const x = clamp(L.cx + side * 0.55 * (L.r - L.l + 30 * scale), s.top.l, s.top.r);
+      jobs.push({ x, y: c.top, left: side > 0, plank: board(L, c.top, c.base) });
+    }
+    // SOON: stands on the baseline in front of the sign, beside the letter
+    for (const L of pick(letterBoxes(soon), 2)) {
+      const side = L.cx < (o.l + o.r) / 2 ? -1 : 1;
+      const x = clamp(L.cx + side * 0.6 * (L.r - L.l), 30 * scale, vw - 30 * scale);
+      jobs.push({ x, y: o.base, left: side > 0, plank: board(L, o.top, o.base) });
+    }
+    return jobs;
   }
 
   function aimAt(tx, ty) {
@@ -807,13 +833,6 @@
     const portalAt = [];                                 // portal element per spot index
     const entry = { x: x + 48 * scale, y: ground };
     const spots2 = [entry, ...jobs.map(j => ({ x: j.x + (j.left ? 1 : -1) * 34 * scale, y: j.y }))];
-    // a few wild shots first, all over the place
-    for (let i = 0; i < 4; i++) {
-      const tx = rand(0.1, 0.9) * vw, ty = rand(0.06, 0.35) * vh;
-      const tip = aimAt(tx, ty);
-      fireAt(tip.x, tip.y, tx, ty, i % 2 ? 'orange' : 'cyan').then(() => sparks(tx, ty));
-      await sleep(120);
-    }
     for (let i = 0; i < spots2.length; i++) {
       const sp = spots2[i];
       const tip = aimAt(sp.x, sp.y - ph / 2);
@@ -934,14 +953,14 @@
     await sleep(700);
     await story();
 
-    // All done: Gangnam Style, forever. Clicks still trigger a quick Floss/Dab/dance,
-    // after which it slides right back into the horse dance.
+    // All done: the Griddy, on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
+    // after which it goes straight back to the Griddy.
     face(false);
-    play('Gangnam');
+    play('Griddy');
     canDance = true;
     for (;;) {
       await wait(500);
-      if (clip !== clips.Gangnam && !dancing) play('Gangnam');
+      if (clip !== clips.Griddy && !dancing) play('Griddy');
     }
   }
 

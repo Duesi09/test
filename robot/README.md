@@ -23,6 +23,7 @@ Each animation is exported as a separate transparent PNG sprite sheet and animat
 | SuperheroLanding | 40 | 16 | 2.5 s | no |
 | Hammer    | 12 | 18 | 0.7 s | yes (hammering, holds a hammer) |
 | Gangnam   | 64 | 16 | 4 s | yes (horse-riding dance with a lasso twirl) |
+| Griddy    | 64 | 16 | 4 s | yes (heel taps and arm pumps on the spot, then "goggles") |
 
 ## Files
 
@@ -47,7 +48,7 @@ Animator parameters:
 - `Speed` (float): 0 plays Idle, above 0.1 plays Walk, above 2 plays Run.
 - `Dance` (bool)
 - `Jump`, `Backflip` and `FallOver` (triggers). FallOver always continues into StandUp, then back to Idle.
-- `Wave`, `Floss`, `Dab`, `Tumble`, `Hammer` and `Gangnam` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
+- `Wave`, `Floss`, `Dab`, `Tumble`, `Hammer`, `Gangnam` and `Griddy` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
 
 The robot faces right. Use `SpriteRenderer.flipX` to make it face left.
 
