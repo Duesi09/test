@@ -25,6 +25,7 @@ Each animation is exported as a separate transparent PNG sprite sheet and animat
 | Gangnam   | 64 | 16 | 4 s | yes (horse-riding dance with a lasso twirl) |
 | Griddy    | 64 | 16 | 4 s | yes (heel taps and arm pumps on the spot, then "goggles") |
 | CuteDance | 64 | 16 | 4 s | yes (claps, arms up, cheek sway, little kicks and a twirl, on the spot) |
+| WavyT     | 64 | 16 | 4 s | yes (arms out in a T, a wave rolls hand to hand and back) |
 
 ## Files
 
@@ -49,7 +50,7 @@ Animator parameters:
 - `Speed` (float): 0 plays Idle, above 0.1 plays Walk, above 2 plays Run.
 - `Dance` (bool)
 - `Jump`, `Backflip` and `FallOver` (triggers). FallOver always continues into StandUp, then back to Idle.
-- `Wave`, `Floss`, `Dab`, `Tumble`, `Hammer`, `Gangnam`, `Griddy` and `CuteDance` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
+- `Wave`, `Floss`, `Dab`, `Tumble`, `Hammer`, `Gangnam`, `Griddy`, `CuteDance` and `WavyT` (bools), and `Cannonball`, `Shake`, `FindGun`, `Shoot` and `SuperheroLanding` (triggers).
 
 The robot faces right. Use `SpriteRenderer.flipX` to make it face left.
 

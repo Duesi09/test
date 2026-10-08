@@ -1483,6 +1483,37 @@
         return k;
       },
     },
+    // Fortnite-style "Wavy T": arms out in a T, a wave rolls from one hand, through the body,
+    // out the other hand, then back. On the spot.
+    WavyT: {
+      frames: 64, fps: 16, loop: true,
+      pose(f) {
+        const w = TAU * f / 16;
+        const dir = f < 32 ? 1 : -1;                         // wave goes left->right, then right->left
+        const r = pos => 30 * Math.sin(w - dir * 1.05 * pos);   // how far each joint is lifted
+        const k = {
+          front: 1, eyes: 'happy', mouth: 'grin',
+          reachF: 2.0, reachB: 2.0,
+          armF: -92 - r(-1), elbF: -1.6 * (r(-2) - r(-1)),
+          armB: 92 + r(1), elbB: 1.6 * (r(2) - r(1)),
+        };
+        const mid = Math.sin(w);
+        k.y = -3 - 3 * mid;                                   // body rides the wave as it passes through
+        k.sy = 1 + 0.025 * mid;
+        k.lean = 4 * Math.cos(w) * dir;
+        k.headRot = 7 * Math.sin(w - dir * 0.6);
+        k.hipF = 4 * Math.sin(w); k.hipB = -4 * Math.sin(w);
+        k.kneeF = k.kneeB = 6 + 6 * Math.max(0, -mid);
+        k.phone = 2 * Math.sin(w);
+        const notes = [];
+        for (let i = 0; i < 2; i++) {
+          const q = (f / 16 + i / 2) % 1;
+          notes.push({ type: 'notes', x: (i ? 70 : -86) + Math.sin(q * 6 + i) * 5, y: -165 - q * 60, a: Math.sin(Math.PI * q) });
+        }
+        k.fx = notes;
+        return k;
+      },
+    },
   };
 
   // Blend two poses (numeric params interpolate, the rest switch halfway).

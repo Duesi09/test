@@ -969,14 +969,14 @@
     await sleep(700);
     await story();
 
-    // All done: a cute dance on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
+    // All done: the Wavy T emote on the spot, forever. Clicks still trigger a quick Floss/Dab/dance,
     // after which it goes straight back to it.
     face(false);
-    play('CuteDance');
+    play('WavyT');
     canDance = true;
     for (;;) {
       await wait(500);
-      if (clip !== clips.CuteDance && !dancing) play('CuteDance');
+      if (clip !== clips.WavyT && !dancing) play('WavyT');
     }
   }
 

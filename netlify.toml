@@ -1,2 +1,23 @@
 [build]
   publish = "."
+
+# Any URL that doesn't exist goes back to the home page.
+[[redirects]]
+  from = "/*"
+  to = "/"
+  status = 302
+  force = false
+
+# www.duesify.com -> duesify.com is set under Domain management (primary domain).
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

@@ -8,7 +8,7 @@ The robot drops in, waves, takes a few steps, backflips off the letters into a h
 pops out next to the N, gets bonked by a portal gun, portals up to the ceiling, tumbles down,
 lands like a superhero, gets an idea, puts on a hard hat, shoots one portal next to each board spot and
 teleport-builds wooden boards onto the letters (one of 10 layouts, picked at random per visit).
-Then it does a cute little dance on the spot, forever.
+Then it does the Wavy T emote on the spot, forever.
 
 - Click the robot to make it Floss, Dab or dance.
 - Hover it and it smiles at you.
@@ -23,6 +23,8 @@ Then it does a cute little dance on the spot, forever.
 | `robot-rig.js` | The robot: drawing and every animation clip. |
 | `scene.js` | The story the robot plays on the page. |
 | `favicon.png` | Tab icon (rendered from the rig). |
+| `og-image.jpg` | Preview image for link shares (WhatsApp, Discord, X, ...). |
+| `netlify.toml` | Netlify settings: publish folder, redirects, security headers. |
 | `robot/` | GIFs, sprite sheets and a Unity importer for all animations (see `robot/README.md`). |
 | `tools/` | Preview page and scripts that export the sprite sheets and GIFs. |
 

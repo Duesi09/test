@@ -8,19 +8,31 @@
   <meta property="og:title" content="Duesify">
   <meta property="og:description" content="Coming soon.">
   <meta property="og:url" content="https://www.duesify.com">
-  <meta name="theme-color" content="#0b1631">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://www.duesify.com/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://www.duesify.com/">
+  <meta name="theme-color" content="#04070f">
   <link rel="icon" href="favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0b1631;
+      --bg: #04070f;
       --text: #eaf0ff;
       --cyan: #7de3f5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { background: var(--bg); }
+    html { background: var(--bg); }
+    body {
+      /* clean black-to-navy: a soft navy glow behind the words, fading to near-black */
+      background:
+        radial-gradient(ellipse 75% 60% at 50% 45%, #13285c 0%, #0b1838 38%, #060b1a 70%, #020308 100%) fixed,
+        var(--bg);
+    }
     body {
       min-height: 100vh;
       min-height: 100svh;
