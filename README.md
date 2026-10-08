@@ -7,12 +7,12 @@ A one-screen "COMING SOON" page with a little chibi robot that lives on the lett
 The robot drops in, waves, takes a few steps, backflips off the letters into a hidden pool,
 pops out next to the N, gets bonked by a portal gun, portals up to the ceiling, tumbles down,
 lands like a superhero, gets an idea, puts on a hard hat, shoots one portal next to each board spot and
-teleport-builds wooden boards onto the letters (one of 10 layouts, picked at random per visit).
+teleport-builds 4 to 6 wooden boards onto random letters (new layout every visit).
 Then it does the Wavy T emote on the spot, forever.
 
 - Click the robot during the story to make it Floss, Dab or dance. The final Wavy T never stops.
 - Hover it and it smiles at you.
-- Add `?layout=1` … `?layout=10` to the URL to see a specific board layout.
+- Add `?boards=4`, `?boards=5` or `?boards=6` to the URL to force a board count.
 - With "reduce motion" turned on, it just stands and breathes.
 
 ## Files

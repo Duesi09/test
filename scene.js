@@ -682,35 +682,17 @@
     return out;
   }
 
-  // 10 hand-picked board layouts, one picked per visit. [word, letter index, angle].
-  // COMING = C O M I N G (0-5), SOON = S O O N (0-3). Each layout has at least 2 boards on
-  // COMING so the robot can walk to the first one and walk home from the last one.
-  const LAYOUTS = [
-    [['c', 1, -50], ['c', 4, 48], ['s', 0, -42], ['s', 2, 56]],
-    [['c', 0, 55], ['c', 3, -40], ['c', 5, -58], ['s', 1, 45]],
-    [['c', 2, -45], ['c', 5, 50], ['s', 0, 60], ['s', 3, -48]],
-    [['c', 0, 40], ['c', 4, -62], ['s', 1, -52], ['s', 3, 44]],
-    [['c', 0, -48], ['c', 4, -55], ['s', 2, 42]],
-    [['c', 3, 60], ['c', 5, -44], ['s', 0, -50], ['s', 1, 38]],
-    [['c', 0, 42], ['c', 2, 58], ['s', 3, -60]],
-    [['c', 1, -38], ['c', 5, 62], ['s', 0, 46], ['s', 2, -40]],
-    [['c', 2, 50], ['c', 4, -46], ['s', 1, -58], ['s', 2, 48]],
-    [['c', 0, -60], ['c', 3, 44], ['s', 3, 40]],
-  ];
-
-  // Order: first COMING board, then every SOON board, then the rest of COMING.
-  // Each board gets exactly one portal, right behind where the robot stands.
+  // Every visit: a random 4, 5 or 6 boards on random letters (at least 2 on COMING, so the robot
+  // can walk to the first one and walk home from the last). Each board gets exactly one portal,
+  // right behind where the robot stands. Layouts where spots would crowd each other are re-rolled.
   function buildJobs() {
     const s = spots(), c = s.coming, o = s.soon;
-    const forced = parseInt(new URLSearchParams(location.search).get('layout'), 10);   // ?layout=1..10 to preview one
-    const layout = LAYOUTS[forced >= 1 && forced <= LAYOUTS.length ? forced - 1 : Math.floor(Math.random() * LAYOUTS.length)];
     const lc = letterBoxes(word), ls = letterBoxes(soon);
-    const make = ([w, i, rot]) => {
-      const top = w === 'c';
-      const L = (top ? lc : ls)[Math.min(i, (top ? lc : ls).length - 1)];
+    const forced = parseInt(new URLSearchParams(location.search).get('boards'), 10);   // ?boards=4..6 to preview
+    const make = (top, L, rot) => {
       const line = top ? c : o;
       const h = line.base - line.top;
-      const plank = { x: L.cx + rand(-0.05, 0.05) * h, y: line.top + rand(0.45, 0.55) * h, w: rand(1.1, 1.22) * h, rot: rot + rand(-4, 4) };
+      const plank = { x: L.cx + rand(-0.05, 0.05) * h, y: line.top + rand(0.45, 0.55) * h, w: rand(1.1, 1.22) * h, rot };
       let side, x;
       if (top) {
         side = L.cx < (c.l + c.r) / 2 ? 1 : -1;                  // stand on top, on the side towards the middle
@@ -723,9 +705,35 @@
       return { x, y: top ? c.top : o.base, left, el: top ? word : soon, top, plank,
         portal: { x: x + (left ? 1 : -1) * 34 * scale, y: top ? c.top : o.base } };
     };
-    const all = layout.map(make);
-    const cs = all.filter(j => j.top).sort((a, b) => a.x - b.x);
-    const ss = all.filter(j => !j.top).sort((a, b) => a.x - b.x);
+    const shuffle = arr => arr.map(v => [Math.random(), v]).sort((p, q) => p[0] - q[0]).map(v => v[1]);
+    const crowded = (jobs, gap) => {
+      for (let i = 0; i < jobs.length; i++) {
+        for (let k = i + 1; k < jobs.length; k++) {
+          const A = jobs[i], B = jobs[k];
+          if (A.top !== B.top) continue;
+          for (const p of [A.x, A.portal.x]) for (const q of [B.x, B.portal.x]) if (Math.abs(p - q) < gap) return true;
+        }
+      }
+      return false;
+    };
+    const n = forced >= 4 && forced <= 6 ? forced : 4 + Math.floor(Math.random() * 3);
+    let best = null;
+    for (let tries = 0, gap = 50 * scale; ; tries++) {
+      if (tries % 300 === 299) gap *= 0.8;                      // tiny screens: relax spacing, never the count
+      const nc = 2 + Math.floor(Math.random() * (Math.min(lc.length, n - 0) - 1));
+      const ns = n - Math.min(nc, lc.length);
+      if (ns > ls.length || ns < 0) continue;
+      const picks = [
+        ...shuffle(lc.map((L, i) => i)).slice(0, n - ns).map(i => [true, lc[i]]),
+        ...shuffle(ls.map((L, i) => i)).slice(0, ns).map(i => [false, ls[i]]),
+      ];
+      let sign = Math.random() < 0.5 ? -1 : 1;
+      const jobs = picks.map(([top, L]) => make(top, L, (sign = -sign) * rand(38, 62)));
+      best = jobs;
+      if (!crowded(jobs, gap) || tries > 3000) break;
+    }
+    const cs = best.filter(j => j.top).sort((a, b) => a.x - b.x);
+    const ss = best.filter(j => !j.top).sort((a, b) => a.x - b.x);
     return [cs[0], ...ss, ...cs.slice(1)];
   }
 
