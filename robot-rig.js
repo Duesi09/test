@@ -1148,6 +1148,7 @@
           kneeF: 10 * env, kneeB: 10 * env,
           phone: 4 * s * env,
           eyes: f < 14 ? 'squint' : 'derp', mouth: f < 14 ? 'o' : 'grin',
+          front: f < 12 ? 0 : 0.8 * Math.sin(Math.PI * Math.min(1, (f - 12) / 12)) + (f >= 18 ? 0.8 * (1 - Math.sin(Math.PI * Math.min(1, (f - 12) / 12))) : 0),
           fx: f < 18 ? [{ type: 'drops', x: 0, y: -100, k: f / 24 }] : [],
         };
       },
@@ -1157,17 +1158,17 @@
       frames: 56, fps: 16, loop: false,
       pose(f) {
         const k = keys([
-          [0, { headRot: 0, headY: 0, sy: 1, armF: -18, elbF: 8, armB: 12, elbB: 8, lean: 0, y: 0 }],
+          [0, { headRot: 0, headY: 0, sy: 1, armF: -18, elbF: 8, armB: 12, elbB: 8, lean: 0, y: 0, front: 0 }],
           [7, { headRot: -16, armF: -26 }],
           [12, { headRot: 8, headY: 7, sy: 0.88 }],
           [16, { headRot: -4, headY: 0, sy: 1.03, lean: -4 }],
           [21, { headRot: -14, armF: 194, elbF: 0, armB: 24, sy: 1, lean: 0 }],
           [24, { armF: 196, sy: 0.94 }],
-          [28, { sy: 1 }],
-          [33, { armF: 186, elbF: 0, armB: 150, elbB: 0, headRot: -8, y: -6 }],
+          [28, { sy: 1, front: 0 }],
+          [33, { armF: 186, elbF: 0, armB: 150, elbB: 0, headRot: -8, y: -6, front: 0.85 }],
           [38, { y: 0 }],
-          [43, { y: -6 }],
-          [49, { armF: 52, elbF: 42, armB: 6, elbB: 10, headRot: 0, y: 0 }],
+          [43, { y: -6, front: 0.85 }],
+          [49, { armF: 52, elbF: 42, armB: 6, elbB: 10, headRot: 0, y: 0, front: 0 }],
           [55, { armF: 52, elbF: 42, armB: 6, elbB: 10 }],
         ], f);
         k.gun = f >= 24 ? 1 : 0;
@@ -1233,12 +1234,12 @@
       pose(f) {
         const LAND = { g: 0, x: -12, y: 16, lean: 16, headRot: 6, headY: 3, hipF: -30, kneeF: 112, hipB: 80, kneeB: 92, footF: 0, footB: 0, armF: 26, elbF: 0, armB: -125, elbB: 0, sx: 1.06, sy: 0.94 };
         const k = keys([
-          [0, Object.assign({}, LAND, { y: 20, sx: 1.14, sy: 0.84 })],
+          [0, Object.assign({}, LAND, { y: 20, sx: 1.14, sy: 0.84, front: 0 })],
           [4, LAND],
-          [16, LAND],
-          [22, Object.assign({}, LAND, { headRot: -8, sx: 1, sy: 1 })],
+          [16, Object.assign({}, LAND, { front: 0 })],
+          [22, Object.assign({}, LAND, { headRot: -8, sx: 1, sy: 1, front: 0.7 })],
           [30, { g: 1, x: 0, y: 0, lean: 6, headRot: -4, headY: 0, hipF: 10, kneeF: 22, hipB: 14, kneeB: 24, armF: -10, elbF: 10, armB: 20, elbB: 10, sx: 1, sy: 1 }],
-          [39, { g: 1, y: 0, lean: 0, headRot: 0, hipF: 0, kneeF: 0, hipB: 0, kneeB: 0, armF: -18, elbF: 8, armB: 12, elbB: 8 }],
+          [39, { g: 1, y: 0, lean: 0, headRot: 0, hipF: 0, kneeF: 0, hipB: 0, kneeB: 0, armF: -18, elbF: 8, armB: 12, elbB: 8, front: 0.9 }],
         ], f);
         k.eyes = f < 18 ? 'determined' : f < 26 ? 'normal' : 'happy';
         k.mouth = f >= 26 ? 'grin' : 'none';
