@@ -29,7 +29,7 @@
   const TURN_MS = 170;
   const emotes = [];                    // {type, start, dur}: chibi speech-bubble reactions
   let fidget = null, nextFidget = 0, dancing = false;
-  const eyes = { look: 0, target: 0, nextLook: 0, nextBlink: 0, blinkAt: -1e9, mx: -1e4, my: -1e4, mt: -1e9 };
+  const eyes = { hover: 0, look: 0, target: 0, nextLook: 0, nextBlink: 0, blinkAt: -1e9, mx: -1e4, my: -1e4, mt: -1e9 };
   let spinRot = 0;                       // extra whole-body rotation (deg) around the body centre
   let hasGun = false, happy = false;
   let portal = null;                     // {ax, ay, bx, by}: entry plane x = ax, exit through the ceiling at (bx, by)
@@ -195,6 +195,17 @@
       eyes.nextLook = now + rand(1200, 3500);
     }
     eyes.look += (eyes.target - eyes.look) * 0.12;
+    // hovering over it makes it happy: it smiles and leans in toward you
+    const hovered = now - eyes.mt < 1500 && hit(eyes.mx, eyes.my);
+    eyes.hover += ((hovered ? 1 : 0) - eyes.hover) * 0.12;
+    if (eyes.hover > 0.02 && (!pose.eyes || pose.eyes === 'normal')) {
+      pose = Object.assign({}, pose, {
+        lean: (pose.lean || 0) + 5 * eyes.hover,
+        headRot: (pose.headRot || 0) + 6 * eyes.hover,
+        front: Math.max(pose.front || 0, 0.6 * eyes.hover),
+      });
+      if (eyes.hover > 0.5) pose = Object.assign({}, pose, { eyes: 'happy', mouth: 'grin' });
+    }
     if (pose.eyes && pose.eyes !== 'normal') return pose;
     const b = (now - eyes.blinkAt) / 140;
     const blink = b < 1 ? Math.sin(Math.PI * b) : 0;
