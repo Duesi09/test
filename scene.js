@@ -287,6 +287,13 @@
     face(tx < x);
     const clipRate = run ? 2 : 2;
     const restart = () => play(run ? 'Run' : 'Walk', { rate: clipRate });
+    if (run) {
+      // wind-up: sink and lean back for a beat before dashing off
+      leanTarget = -9;
+      play('Idle', { mod: p => Object.assign({}, p, { kneeF: 22, kneeB: 22, hipF: 10, hipB: 10, armF: 30, armB: -40, eyes: 'determined' }) });
+      await sleep(170);
+      override = null;
+    }
     restart();
     const vmax = (run ? 76 : 14) * clipRate * SPEED * scale * speedMul;
     const accel = vmax / 0.22;
@@ -303,7 +310,8 @@
       v = nv;
       x += clamp(tx - x, -v * dt, v * dt);
     }
-    leanTarget = stopAtEnd ? -4 : 0;
+    leanTarget = stopAtEnd ? (run ? -11 : -4) : 0;
+    if (stopAtEnd && run) skidDust();
     if (stopAtEnd) {
       play('Idle');
       setTimeout(() => { leanTarget = 0; }, 160);
@@ -360,6 +368,17 @@
     while (performance.now() < end) {
       splash(px + rand(-20, 20) * scale, py, 3, 0.35);
       await sleep(rand(250, 500));
+    }
+  }
+
+  function skidDust() {
+    const dir = flip ? 1 : -1;                          // dust kicks up behind the feet
+    for (let i = 0; i < 6; i++) {
+      const size = rand(5, 10) * Math.max(0.7, scale * 1.6);
+      drop(x + dir * rand(5, 25) * scale, ground - 3, size, '#c9d3f2', [
+        { transform: 'translate(0, 0) scale(0.6)', opacity: 0.85 },
+        { transform: `translate(${dir * rand(15, 40) * scale}px, ${-rand(6, 18) * scale}px) scale(1.3)`, opacity: 0 },
+      ], rand(380, 600));
     }
   }
 
