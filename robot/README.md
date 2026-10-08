@@ -12,6 +12,13 @@ Each animation is exported as a separate transparent PNG sprite sheet and animat
 | Dance     | 96 | 12 | 8 s | yes |
 | Backflip  | 64 | 16 | 4 s | no |
 | StandUp   | 64 | 16 | 4 s | no (starts from the FallOver end pose) |
+| Wave      | 32 | 16 | 2 s | yes |
+| Floss     | 32 | 16 | 2 s | yes |
+| Dab       | 32 | 16 | 2 s | yes |
+| Cannonball| 48 | 16 | 3 s | no |
+| Shake     | 24 | 24 | 1 s | no (shakes off water) |
+| FindGun   | 56 | 16 | 3.5 s | no (gun bonks its head, it catches it) |
+| Shoot     | 40 | 16 | 2.5 s | no (fires the portal gun twice) |
 
 ## Files
 
@@ -36,6 +43,7 @@ Animator parameters:
 - `Speed` (float): 0 plays Idle, above 0.1 plays Walk, above 2 plays Run.
 - `Dance` (bool)
 - `Jump`, `Backflip` and `FallOver` (triggers). FallOver always continues into StandUp, then back to Idle.
+- `Wave`, `Floss` and `Dab` (bools), and `Cannonball`, `Shake`, `FindGun` and `Shoot` (triggers).
 
 The robot faces right. Use `SpriteRenderer.flipX` to make it face left.
 

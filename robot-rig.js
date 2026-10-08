@@ -45,6 +45,9 @@
     footF: 0, footB: 0,          // foot tilt (+ = toes up)
     phone: 0,                    // headphone lag (units)
     eyes: 'normal', blink: 0, look: 0,
+    mouth: 'none',               // none | smile | grin | o
+    gun: 0,                      // > 0.5 = holding the portal gun
+    mirror: false,               // instant left/right swap (used by Dab)
     shadowW: 1,
   };
   const NUMERIC = Object.keys(BASE).filter(k => typeof BASE[k] === 'number');
@@ -158,7 +161,28 @@
     ctx.restore();
   }
 
-  function drawArm(ctx, sx, sy, ang, elb, back) {
+  // Portal gun, drawn along +x with the grip at the origin.
+  function drawGun(ctx) {
+    ctx.lineJoin = 'round';
+    rrect(ctx, -6, -9, 44, 18, 8);
+    ctx.lineWidth = LW * 2; ctx.strokeStyle = COL.out; ctx.stroke();
+    ctx.fillStyle = COL.navy; ctx.fill();
+    ctx.save();
+    ctx.shadowColor = COL.cyan; ctx.shadowBlur = 8;
+    ctx.fillStyle = COL.cyan;
+    rrect(ctx, 4, -3, 26, 6, 3); ctx.fill();
+    ctx.restore();
+    rrect(ctx, 34, -11, 10, 22, 4);
+    ctx.lineWidth = LW * 2; ctx.stroke();
+    ctx.fillStyle = '#f3f5fc'; ctx.fill();
+    ctx.save();
+    ctx.shadowColor = COL.cyan; ctx.shadowBlur = 10;
+    ctx.fillStyle = COL.cyan;
+    ctx.beginPath(); ctx.arc(48, 0, 5.5, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawArm(ctx, sx, sy, ang, elb, back, gun) {
     const a = rad(ang);
     const ex = sx + UPPER * Math.sin(a), ey = sy + UPPER * Math.cos(a);
     const b = rad(ang + elb);
@@ -172,6 +196,16 @@
     ctx.fill();
     seg(ctx, sx, sy, ex, ey, W + 2, back ? COL.navyBack : COL.navy);
     seg(ctx, ex, ey, hx, hy, W, back ? COL.bodyBack : COL.body);
+    if (gun) {
+      ctx.save();
+      ctx.translate(hx, hy);
+      ctx.rotate(Math.atan2(Math.cos(b), Math.sin(b)));
+      drawGun(ctx);
+      ctx.restore();
+      ctx.beginPath();
+      ctx.arc(hx, hy, 11.5 + LW / 2, 0, Math.PI * 2);
+      ctx.lineWidth = LW; ctx.strokeStyle = COL.out; ctx.stroke();
+    }
     ctx.beginPath();
     ctx.arc(hx, hy, 11.5, 0, Math.PI * 2);
     ctx.fillStyle = back ? COL.bodyBack : COL.body;
@@ -299,9 +333,36 @@
         ctx.closePath();
         ctx.fill();
         break;
+      case 'derp':
+        oval({ x: e1.x - 1, y: e1.y + 1 }, 9.5, 12.5);
+        oval({ x: e2.x + 1, y: e2.y - 4 }, 4.5, 5.5);
+        break;
+      case 'stars':
+        for (const e of [e1, e2]) {
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 4.2 : 10.5;
+            const x = e.x + Math.cos(a) * r, y = e.y + Math.sin(a) * r;
+            i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+        break;
       default:
         oval(e1, 7, 10 * blinkY);
         oval(e2, 6.5, 10 * blinkY);
+    }
+    const mx = 23 + p.look * 4, my = -114;
+    ctx.lineWidth = 2.6;
+    if (p.mouth === 'smile') {
+      ctx.beginPath(); ctx.moveTo(mx - 6, my - 2); ctx.quadraticCurveTo(mx, my + 5, mx + 6, my - 2); ctx.stroke();
+    } else if (p.mouth === 'grin') {
+      ctx.beginPath(); ctx.moveTo(mx - 7, my - 3); ctx.lineTo(mx + 7, my - 3);
+      ctx.quadraticCurveTo(mx + 7, my + 6, mx, my + 6); ctx.quadraticCurveTo(mx - 7, my + 6, mx - 7, my - 3);
+      ctx.fill();
+    } else if (p.mouth === 'o') {
+      ctx.beginPath(); ctx.ellipse(mx, my + 1, 3.4, 4.4, 0, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   }
@@ -464,6 +525,56 @@
           ctx.fill();
           break;
         }
+        case 'gun': {
+          ctx.translate(e.x, e.y);
+          ctx.rotate(e.r || 0);
+          ctx.translate(-14, 0);
+          drawGun(ctx);
+          break;
+        }
+        case 'flash': {
+          const t = e.t, r = 6 + t * 14;
+          ctx.globalAlpha = (e.a ?? 1) * (1 - t);
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = COL.cyan; ctx.shadowBlur = 14;
+          ctx.beginPath();
+          for (let i = 0; i < 16; i++) {
+            const a = i * Math.PI / 8, rr = i % 2 ? r * 0.45 : r;
+            const x = e.x + Math.cos(a) * rr, y = e.y + Math.sin(a) * rr;
+            i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+          }
+          ctx.closePath();
+          ctx.fill();
+          break;
+        }
+        case 'drops': {
+          for (let i = 0; i < 10; i++) {
+            const a = i * 2.4 + 0.3, d = 30 + ((e.k * 3 + i * 0.37) % 1) * 60;
+            ctx.globalAlpha = (e.a ?? 1) * (1 - ((e.k * 3 + i * 0.37) % 1));
+            ctx.beginPath();
+            ctx.arc(e.x + Math.cos(a) * d * 1.3, e.y + Math.sin(a) * d * 0.7, 3 + (i % 3), 0, Math.PI * 2);
+            ctx.fill();
+          }
+          break;
+        }
+        case 'stars': {
+          ctx.fillStyle = '#ffe27a';
+          for (let i = 0; i < 3; i++) {
+            const a = e.k * Math.PI * 2 + i * 2.1;
+            const x = e.x + Math.cos(a) * 30, y = e.y + Math.sin(a) * 9;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.beginPath();
+            for (let j = 0; j < 10; j++) {
+              const b = -Math.PI / 2 + j * Math.PI / 5, r = j % 2 ? 2.6 : 6.5;
+              j ? ctx.lineTo(Math.cos(b) * r, Math.sin(b) * r) : ctx.moveTo(Math.cos(b) * r, Math.sin(b) * r);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          }
+          break;
+        }
         case 'bounce': {
           ctx.lineWidth = 2.6;
           ctx.globalAlpha = (e.a ?? 1) * 0.8;
@@ -504,7 +615,7 @@
 
     ctx.save();
     ctx.translate(p.x, p.rootY);
-    ctx.scale(p.sx * p.spin, p.sy);
+    ctx.scale(p.sx * p.spin * (p.mirror ? -1 : 1), p.sy);
     ctx.translate(p.px, p.py);
     ctx.rotate(rad(p.rot));
     ctx.translate(-p.px, -p.py);
@@ -537,7 +648,7 @@
     ctx.translate(0, -NECK_Y);
     drawHead(ctx, p);
     ctx.restore();
-    drawArm(ctx, -31, -81, p.armF, p.elbF, false);
+    drawArm(ctx, -31, -81, p.armF, p.elbF, false, p.gun > 0.5);
     ctx.restore();
 
     ctx.restore();
@@ -643,8 +754,10 @@
           hipB: R.hip, kneeB: R.knee, footB: R.foot,
           armB: 32 * swing, armF: -32 * swing, elbF: 18, elbB: 18,
           lean: 4,
-          headRot: 2.5 * Math.sin(TAU * p) + 2,
-          headY: 1.4 * Math.cos(TAU * 2 * (p - 0.27)),
+          y: -3 * Math.pow(Math.sin(TAU * (p - 0.15)), 2),
+          headRot: 6 * Math.sin(TAU * p) + 2,
+          headY: 2 * Math.cos(TAU * 2 * (p - 0.27)),
+          mouth: 'smile',
           phone: 1.2 * Math.sin(TAU * 2 * p),
           blink: blinkAt(f, 30),
         };
@@ -854,6 +967,159 @@
         k.fx = [];
         if (f < 16) k.fx.push({ type: 'swirl', x: -46, y: -104, k: f / 16, a: 1 - f / 16 });
         if (f >= 30 && f <= 38) k.fx.push({ type: 'dust', x: 0, t: (f - 30) / 8, a: 0.6 });
+        return k;
+      },
+    },
+
+    // ----- Extra moves for the coming-soon scene -----
+
+    Wave: {
+      frames: 32, fps: 16, loop: true,
+      pose(f) {
+        const p = f / 32;
+        const w = Math.sin(TAU * 4 * p);
+        const hop = Math.abs(Math.sin(TAU * 2 * p));
+        return {
+          armF: -152 + 10 * w, elbF: -8 + 34 * w,
+          armB: 16, elbB: 20,
+          headRot: -9 + 3 * w, headY: -1.5 * hop,
+          y: -4 * hop, sy: 1 + 0.03 * (1 - hop),
+          lean: -3,
+          kneeF: 6 * (1 - hop), kneeB: 6 * (1 - hop),
+          phone: 1.5 * w,
+          eyes: 'happy', mouth: 'grin',
+        };
+      },
+    },
+
+    Floss: {
+      frames: 32, fps: 16, loop: true,
+      pose(f) {
+        const s = Math.sin(TAU * f / 16);
+        const c = Math.cos(TAU * f / 16);
+        return {
+          armF: 48 * s, armB: 48 * s, elbF: 0, elbB: 0,
+          x: -9 * s, lean: 7 * s,
+          hipF: -6 * s, hipB: -6 * s,
+          kneeF: 10 + 8 * Math.abs(c), kneeB: 10 + 8 * Math.abs(c),
+          y: -3 * Math.abs(c),
+          headRot: -7 * s, headX: 2 * s,
+          phone: 2 * s,
+          eyes: 'happy', mouth: 'grin',
+        };
+      },
+    },
+
+    Dab: {
+      frames: 32, fps: 16, loop: true,
+      pose(f) {
+        const N = { armF: -18, armB: 12, elbF: 8, elbB: 8, headRot: 0, lean: 0, headY: 0, y: 0, kneeF: 0, kneeB: 0 };
+        const D = { armF: 118, elbF: 105, armB: 138, elbB: 0, headRot: 24, lean: 9, headY: 4, y: 0, kneeF: 14, kneeB: 6 };
+        const k = keys([[0, N], [5, D], [11, D], [16, N], [21, D], [27, D], [31, N]], f);
+        k.y = -5 * Math.abs(Math.sin(Math.PI * f / 8));
+        k.mirror = f >= 16;
+        k.eyes = (f >= 5 && f < 12) || (f >= 21 && f < 28) ? 'happy' : 'normal';
+        k.mouth = 'grin';
+        return k;
+      },
+    },
+
+    Cannonball: {
+      frames: 48, fps: 16, loop: false,
+      pose(f) {
+        const k = keys([
+          [0, { y: 0, rot: 0, sy: 1, sx: 1, hipF: 0, hipB: 0, kneeF: 0, kneeB: 0, armF: -18, armB: 12, elbF: 8, elbB: 8, lean: 0, headRot: 0 }],
+          [6, { y: 0, sy: 0.84, sx: 1.1, hipF: 32, hipB: 30, kneeF: 66, kneeB: 64, armF: -40, armB: -50, lean: 14, headRot: 6 }],
+          [11, { y: -50, sy: 1.15, sx: 0.9, hipF: -6, hipB: -10, kneeF: 6, kneeB: 6, armF: 160, armB: 150, elbF: 6, elbB: 6, lean: -6, headRot: -8 }],
+          [16, { y: -86, sy: 1, sx: 1, rot: 40, hipF: 105, hipB: 100, kneeF: 140, kneeB: 135, armF: 70, elbF: 75, armB: 60, elbB: 75, lean: 18, headRot: 18 }],
+          [24, { y: -100, rot: 160 }],
+          [32, { y: -62, rot: 280 }],
+          [40, { y: -12, rot: 400 }],
+          [47, { y: 0, rot: 470 }],
+        ], f);
+        k.py = -80;
+        k.eyes = f < 11 ? 'normal' : 'happy';
+        k.mouth = f < 6 ? 'smile' : f < 16 ? 'grin' : 'o';
+        k.phone = f > 10 ? 3 : 0;
+        k.fx = f >= 18 && f <= 44 ? [{ type: 'arcs', x: 0, y: k.y - 80, a0: rad(k.rot) + 2, a: 0.6 }] : [];
+        return k;
+      },
+    },
+
+    Shake: {
+      frames: 24, fps: 24, loop: false,
+      pose(f) {
+        const s = Math.sin(TAU * f / 6);
+        const env = f < 18 ? 1 : (23 - f) / 5;
+        return {
+          lean: 13 * s * env, headRot: -20 * s * env, x: 3 * s * env,
+          armF: -18 + 45 * s * env, armB: 12 - 45 * s * env, elbF: 20, elbB: 20,
+          kneeF: 10 * env, kneeB: 10 * env,
+          phone: 4 * s * env,
+          eyes: f < 14 ? 'squint' : 'derp', mouth: f < 14 ? 'o' : 'grin',
+          fx: f < 18 ? [{ type: 'drops', x: 0, y: -100, k: f / 24 }] : [],
+        };
+      },
+    },
+
+    FindGun: {
+      frames: 56, fps: 16, loop: false,
+      pose(f) {
+        const k = keys([
+          [0, { headRot: 0, headY: 0, sy: 1, armF: -18, elbF: 8, armB: 12, elbB: 8, lean: 0, y: 0 }],
+          [7, { headRot: -16, armF: -26 }],
+          [12, { headRot: 8, headY: 7, sy: 0.88 }],
+          [16, { headRot: -4, headY: 0, sy: 1.03, lean: -4 }],
+          [21, { headRot: -14, armF: 194, elbF: 0, armB: 24, sy: 1, lean: 0 }],
+          [24, { armF: 196, sy: 0.94 }],
+          [28, { sy: 1 }],
+          [33, { armF: 186, elbF: 0, armB: 150, elbB: 0, headRot: -8, y: -6 }],
+          [38, { y: 0 }],
+          [43, { y: -6 }],
+          [49, { armF: 52, elbF: 42, armB: 6, elbB: 10, headRot: 0, y: 0 }],
+          [55, { armF: 52, elbF: 42, armB: 6, elbB: 10 }],
+        ], f);
+        k.gun = f >= 24 ? 1 : 0;
+        k.eyes = f < 5 ? 'normal' : f < 12 ? 'surprised' : f < 19 ? 'derp' : f < 30 ? 'surprised' : f < 46 ? 'stars' : 'happy';
+        k.mouth = f < 5 ? 'none' : f < 12 ? 'o' : f < 19 ? 'grin' : f < 30 ? 'o' : 'grin';
+        k.fx = [];
+        if (f < 12) {
+          const t = f / 12;
+          k.fx.push({ type: 'gun', x: 4, y: lerp(-290, -192, t * t), r: t * 4 });
+        } else if (f < 24) {
+          const t = (f - 12) / 12;
+          k.fx.push({ type: 'gun', x: lerp(4, -36, t), y: lerp(-192, -112, t) - 70 * Math.sin(Math.PI * t), r: 4 + t * 7.5 });
+        }
+        if (f >= 12 && f < 24) k.fx.push({ type: 'stars', x: 0, y: -196, k: (f - 12) / 12 });
+        if (f >= 30 && f < 46) {
+          const t = (f - 30) / 16;
+          k.fx.push({ type: 'sparkle', x: -70, y: -160 - t * 10, s: 0.5 + 0.4 * Math.sin(Math.PI * t), a: Math.sin(Math.PI * t) });
+          k.fx.push({ type: 'sparkle', x: -10, y: -205 + t * 8, s: 0.4 + 0.3 * Math.sin(Math.PI * t), a: Math.sin(Math.PI * t) });
+        }
+        return k;
+      },
+    },
+
+    Shoot: {
+      frames: 40, fps: 16, loop: false,
+      pose(f) {
+        const k = keys([
+          [0, { armF: 52, elbF: 42, lean: 0, headRot: 0, x: 0 }],
+          [5, { armF: 88, elbF: 0, lean: -2 }],
+          [8, { armF: 102, lean: -9, headRot: -7, x: -4 }],
+          [12, { armF: 88, lean: -2, headRot: 0, x: 0 }],
+          [19, { armF: 70, elbF: 0 }],
+          [22, { armF: 84, lean: -8, headRot: -6, x: -4 }],
+          [26, { armF: 70, lean: -2, headRot: 0, x: 0 }],
+          [33, { armF: 52, elbF: 42, lean: 0 }],
+          [39, { armF: 52, elbF: 42 }],
+        ], f);
+        k.gun = 1;
+        k.eyes = f >= 4 && f < 30 ? 'determined' : 'happy';
+        k.mouth = f >= 30 ? 'grin' : 'none';
+        k.fx = [];
+        if (f >= 8 && f < 12) k.fx.push({ type: 'flash', x: 50, y: -84, t: (f - 8) / 4 });
+        if (f >= 22 && f < 26) k.fx.push({ type: 'flash', x: 44, y: -56, t: (f - 22) / 4 });
         return k;
       },
     },

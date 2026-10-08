@@ -101,6 +101,7 @@ public static class DuesifyRobotAnimationBuilder
     // Parameters:
     //   Speed (float): 0 = Idle, > 0.1 = Walk, > 2 = Run
     //   Dance (bool), Jump / Backflip / FallOver (triggers)
+    //   Wave / Floss / Dab (bools), Cannonball / Shake / FindGun / Shoot (triggers)
     // FallOver always continues into StandUp, then back to Idle.
     static void CreateController(Dictionary<string, AnimationClip> clips, string outDir)
     {
@@ -146,6 +147,27 @@ public static class DuesifyRobotAnimationBuilder
         ExitTo(s["Backflip"], s["Idle"]);
         ExitTo(s["FallOver"], s["StandUp"]);
         ExitTo(s["StandUp"], s["Idle"]);
+
+        // Extra moves (Wave, Floss, Dab, Cannonball, Shake, FindGun, Shoot):
+        // looping ones get a bool, one-shots get a trigger, all named after the clip.
+        var core = new HashSet<string> { "Idle", "Walk", "Run", "Jump", "FallOver", "Dance", "Backflip", "StandUp" };
+        foreach (var kv in s)
+        {
+            if (core.Contains(kv.Key)) continue;
+            bool loop = clips[kv.Key].isLooping;
+            controller.AddParameter(kv.Key, loop ? AnimatorControllerParameterType.Bool : AnimatorControllerParameterType.Trigger);
+            if (loop)
+            {
+                Link(s["Idle"], kv.Value, 0.1f, (AnimatorConditionMode.If, kv.Key, 0));
+                Link(kv.Value, s["Idle"], 0.1f, (AnimatorConditionMode.IfNot, kv.Key, 0));
+            }
+            else
+            {
+                foreach (var from in new[] { "Idle", "Walk", "Run" })
+                    Link(s[from], kv.Value, 0.05f, (AnimatorConditionMode.If, kv.Key, 0));
+                ExitTo(kv.Value, s["Idle"]);
+            }
+        }
     }
 
     static void Link(AnimatorState from, AnimatorState to, float duration, (AnimatorConditionMode mode, string param, float threshold) cond)

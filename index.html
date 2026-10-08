@@ -18,7 +18,6 @@
       --bg: #0b1631;
       --text: #eaf0ff;
       --cyan: #7de3f5;
-      --rim: #e4eafb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: var(--bg); }
@@ -41,7 +40,7 @@
       letter-spacing: -0.035em;
       text-transform: uppercase;
       text-align: center;
-      padding: 1.45em 16px 0.7em;   /* room above for the robot to jump, below for the pool */
+      padding: 1.1em 16px 0.6em;    /* room above for the robot's jumps */
     }
     .line { display: block; white-space: nowrap; }
     .w {
@@ -51,58 +50,42 @@
     }
     @keyframes rise { from { opacity: 0; transform: translateY(0.3em); } }
 
-    /* Pool */
-    .pool {
-      --ph: max(56px, 0.72em);
-      position: relative;
-      display: inline-block;
-      width: max(120px, 2.1em);
-      height: var(--ph);
-      margin-left: 0.25em;
-      margin-bottom: calc(var(--ph) * -0.62);
-      border: 3px solid var(--rim);
-      border-radius: 10px 10px 26px 26px;
-      background:
-        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 14px 14px,
-        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px) 0 0 / 14px 14px,
-        #0e2a5e;
-    }
-    .ladder {
-      position: absolute;
-      right: 12%; top: -22px;
-      width: 16px; height: 42px;
-      border-left: 3px solid var(--rim);
-      border-right: 3px solid var(--rim);
-      background: repeating-linear-gradient(transparent 0 8px, var(--rim) 8px 11px);
-    }
-    .water {
-      position: absolute;
-      left: 0; right: 0; bottom: 0; top: 24%;
-      border-radius: 0 0 23px 23px;
-      background: linear-gradient(rgba(79, 182, 245, 0.85), rgba(42, 111, 214, 0.92));
-      z-index: 30;
-      pointer-events: none;
-    }
-    .water::before {
-      content: "";
-      position: absolute;
-      left: 0; right: 0; top: -7px; height: 8px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M0 4 Q10 0 20 4 T40 4 V8 H0Z' fill='%234fb6f5' fill-opacity='.85'/%3E%3C/svg%3E") repeat-x 0 0 / 40px 8px;
-      animation: waves 2.4s linear infinite;
-    }
-    @keyframes waves { to { background-position-x: 40px; } }
+    /* Splash bits for the hidden pool, portals and portal-gun shots */
     .ripple {
       position: absolute;
-      top: 24%;
-      width: 60px; height: 14px;
-      margin: -7px 0 0 -30px;
-      border: 2px solid rgba(255, 255, 255, 0.7);
+      width: 70px; height: 14px;
+      margin: -7px 0 0 -35px;
+      border: 2px solid rgba(125, 227, 245, 0.75);
       border-radius: 50%;
       z-index: 31;
       pointer-events: none;
       animation: ripple 0.9s ease-out forwards;
     }
-    @keyframes ripple { from { transform: scale(0.3); } to { transform: scale(2); opacity: 0; } }
+    @keyframes ripple { from { transform: scale(0.3); } to { transform: scale(2.2); opacity: 0; } }
+    .portal {
+      --c: 79, 216, 255;
+      position: absolute;
+      z-index: 15;
+      border-radius: 50%;
+      border: 4px solid rgb(var(--c));
+      background: radial-gradient(ellipse at center, rgba(var(--c), 0.55), rgba(var(--c), 0.18) 55%, rgba(var(--c), 0) 72%);
+      box-shadow: 0 0 18px rgba(var(--c), 0.8), inset 0 0 16px rgba(var(--c), 0.7);
+      pointer-events: none;
+      transform: scale(0);
+      transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1);
+    }
+    .portal.orange { --c: 255, 154, 60; }
+    .portal.open { transform: scale(1); animation: wobble 1.2s ease-in-out infinite; }
+    .portal.closing { transform: scale(0); transition-timing-function: ease-in; }
+    @keyframes wobble { 50% { transform: scale(1.06, 0.97); } }
+    .shot {
+      position: absolute;
+      width: 12px; height: 12px;
+      margin: -6px 0 0 -6px;
+      border-radius: 50%;
+      z-index: 26;
+      pointer-events: none;
+    }
     .drop {
       position: absolute;
       border-radius: 50%;
@@ -122,14 +105,14 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .w, .water::before { animation: none !important; }
+      .w, .portal { animation: none !important; }
     }
   </style>
 </head>
 <body>
   <h1 aria-label="Coming soon">
     <span class="line"><span class="w" style="--i:0" id="word">Coming</span></span>
-    <span class="line"><span class="w" style="--i:1">Soon</span><span class="pool" id="pool" aria-hidden="true"><span class="ladder"></span><span class="water"></span></span></span>
+    <span class="line"><span class="w" style="--i:1" id="soon">Soon</span></span>
   </h1>
 
   <canvas id="bot" role="img" aria-label="A cute robot playing on the page"></canvas>
