@@ -846,15 +846,15 @@
       await teleportIn();
       x = j.x;
       nailBoard(j.plank);
-      play('Hammer', { rate: 1.5 });
-      const hit = duration('Hammer', 1.5) * 6 / 12;
-      for (let k = 0; k < 3; k++) {
+      play('Hammer', { rate: 2 });
+      const hit = duration('Hammer', 2) * 6 / 12;
+      for (let k = 0; k < 2; k++) {
         await sleep(hit);
         sparks(j.plank.x, j.plank.y);
         (n < 2 ? word : soon).animate(
           [{ transform: 'translate(0, 0)' }, { transform: `translate(${j.left ? -1.5 : 1.5}px, 2.5px)` }, { transform: 'translate(0, 0)' }],
           { duration: 110, easing: 'ease-out', composite: 'add' });
-        await sleep(duration('Hammer', 1.5) - hit);
+        await sleep(duration('Hammer', 2) - hit);
       }
       play('Idle');
       await sleep(60);
