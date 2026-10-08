@@ -312,7 +312,8 @@
       ctx.save();
       ctx.shadowBlur = 0;
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.ellipse(e.x + 2.2, e.y - 3.8 * blinkY, big ? 3 : 2.6, (big ? 3.4 : 3) * blinkY, 0, 0, Math.PI * 2); ctx.fill();
+      const tw = 1 + 0.18 * Math.sin(p.eq * 5 + (big ? 0 : 1.3));   // gentle twinkle
+      ctx.beginPath(); ctx.ellipse(e.x + 2.2, e.y - 3.8 * blinkY, (big ? 3 : 2.6) * tw, (big ? 3.4 : 3) * blinkY * tw, 0, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 0.85;
       ctx.beginPath(); ctx.arc(e.x - 2.6, e.y + 4 * blinkY, 1.4, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
@@ -397,7 +398,8 @@
         glint(e1, true); glint(e2, false);
     }
     ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255, 128, 176, 0.28)';
+    const happyFace = p.eyes === 'happy' || p.eyes === 'stars' || p.mouth === 'grin';
+    ctx.fillStyle = `rgba(255, 128, 176, ${happyFace ? 0.5 : 0.28})`;
     ctx.beginPath(); ctx.ellipse(e1.x - 6, e1.y + 12, 6.5, 3.6, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(e2.x + 6, e2.y + 12, 5.5, 3.4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = COL.cyan;
