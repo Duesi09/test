@@ -1,0 +1,26 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Robot export</title></head>
+<body>
+<script src="../robot-rig.js"></script>
+<script>
+// Renders every frame of every clip onto a transparent cell and exposes them as PNG data URLs.
+// Used by tools/export.js (headless Chromium).
+window.renderAll = (scale) => {
+  const { CELL, clips, draw } = RobotRig;
+  const w = Math.round(CELL.w * scale), h = Math.round(CELL.h * scale);
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d');
+  const out = {};
+  for (const [name, clip] of Object.entries(clips)) {
+    out[name] = { fps: clip.fps, loop: clip.loop, frames: [] };
+    for (let f = 0; f < clip.frames; f++) {
+      ctx.clearRect(0, 0, w, h);
+      draw(ctx, clip.pose(f), { x: CELL.groundX * scale, y: CELL.groundY * scale, scale });
+      out[name].frames.push(c.toDataURL('image/png'));
+    }
+  }
+  return { cell: { w, h, groundX: CELL.groundX * scale, groundY: CELL.groundY * scale }, clips: out };
+};
+</script>
+</body></html>

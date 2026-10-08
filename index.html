@@ -4,20 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Duesify — Coming soon</title>
-  <meta name="description" content="Something great is coming soon.">
+  <meta name="description" content="Coming soon.">
   <meta property="og:title" content="Duesify">
-  <meta property="og:description" content="Something great is coming soon.">
+  <meta property="og:description" content="Coming soon.">
   <meta property="og:url" content="https://www.duesify.com">
   <meta name="theme-color" content="#0b1631">
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #0b1631;
       --text: #eaf0ff;
-      --muted: #8fa2cc;
       --cyan: #7de3f5;
       --rim: #e4eafb;
     }
@@ -27,39 +26,30 @@
       min-height: 100vh;
       min-height: 100svh;
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       color: var(--text);
       font-family: "Manrope", system-ui, sans-serif;
-      overflow-x: hidden;
+      overflow: hidden;
       -webkit-font-smoothing: antialiased;
     }
-    .wrap { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-
-    header .wrap { height: 76px; display: flex; align-items: center; }
-    .logo {
-      display: flex; align-items: center; gap: 10px;
-      font-weight: 800; font-size: 17px;
-      color: var(--text); text-decoration: none;
-    }
-    .logo img { width: 30px; height: 30px; display: block; }
-
-    main { flex: 1; display: flex; align-items: center; padding: 40px 0 96px; }
 
     h1 {
-      font-size: min(13vw, 15vh);
+      font-size: min(16vw, 19vh);
       font-weight: 800;
-      line-height: 1.35;
+      line-height: 1.04;
       letter-spacing: -0.035em;
       text-transform: uppercase;
+      text-align: center;
+      padding: 1.45em 16px 0.7em;   /* room above for the robot to jump, below for the pool */
     }
     .line { display: block; white-space: nowrap; }
     .w {
       display: inline-block;
       animation: rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-      animation-delay: calc(var(--i) * 110ms);
+      animation-delay: calc(var(--i) * 140ms);
     }
-    .w.hl { color: var(--cyan); }
-    @keyframes rise { from { opacity: 0; transform: translateY(0.4em); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(0.3em); } }
 
     /* Pool */
     .pool {
@@ -121,157 +111,30 @@
       pointer-events: none;
     }
 
-    @media (max-width: 600px) {
-      h1 { line-height: 1.5; }
-      main { padding-bottom: 80px; }
-    }
-
-    /* ---------- Robot ---------- */
-    .bot {
+    #bot {
       position: absolute;
       top: 0; left: 0;
-      width: 62px; height: 77px;
       z-index: 20;
       cursor: pointer;
       opacity: 0;
-      user-select: none;
+      transition: opacity 0.4s;
       -webkit-tap-highlight-color: transparent;
-      will-change: transform;
     }
-    .bot .dir, .bot .spin { width: 100%; height: 100%; }
-    .bot .spin { transform-origin: 50% 55%; }
-    .bot svg { width: 100%; height: 100%; display: block; overflow: visible; }
-    .bot svg * { transform-box: view-box; }
-    .rig   { transform-origin: 50px 120px; transition: transform 0.15s; }
-    .head  { transform-origin: 50px 66px; transition: transform 0.25s; }
-    .arm-l { transform-origin: 32px 74px; transition: transform 0.2s; }
-    .arm-r { transform-origin: 68px 74px; transition: transform 0.2s; }
-    .leg-l { transform-origin: 42px 98px; }
-    .leg-r { transform-origin: 58px 98px; }
-    .eye   { transform-box: fill-box; transform-origin: center; transition: transform 0.08s, opacity 0.15s; }
-    .eyes  { transition: transform 0.2s; }
-    .blink .eye { transform: scaleY(0.12); }
-    .happy-eyes { opacity: 0; transition: opacity 0.15s; }
-    .happy .eye { opacity: 0; }
-    .happy .happy-eyes { opacity: 1; }
-    .shades { opacity: 0; transform: translateY(-34px); transition: transform 0.3s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s; }
-    .cool .shades { opacity: 1; transform: none; }
-
-    .walking .rig   { animation: bob 0.22s ease-in-out infinite alternate; }
-    .walking .leg-l { animation: step 0.44s ease-in-out infinite alternate; }
-    .walking .leg-r { animation: step 0.44s ease-in-out infinite alternate-reverse; }
-    .walking .arm-l { animation: swing 0.44s ease-in-out infinite alternate-reverse; }
-    .walking .arm-r { animation: swing 0.44s ease-in-out infinite alternate; }
-    @keyframes bob   { to { transform: translateY(-3px); } }
-    @keyframes step  { from { transform: rotate(-22deg); } to { transform: rotate(22deg); } }
-    @keyframes swing { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
-
-    .crouch .rig { transform: scale(1.06, 0.86); }
-    .land .rig   { transform: scale(1.1, 0.84); }
-    .air .arm-l  { transform: rotate(140deg); }
-    .air .arm-r  { transform: rotate(-140deg); }
-    .air .leg-l  { transform: rotate(-12deg); }
-    .air .leg-r  { transform: rotate(12deg); }
-
-    .look .head { transform: rotate(10deg); }
-
-    .swim .rig   { animation: float 0.9s ease-in-out infinite alternate; }
-    .swim .arm-l { animation: paddle 0.45s ease-in-out infinite alternate; }
-    .swim .arm-r { animation: paddle 0.45s ease-in-out infinite alternate-reverse; }
-    @keyframes float  { from { transform: translateY(2px) rotate(-4deg); } to { transform: translateY(-3px) rotate(4deg); } }
-    @keyframes paddle { from { transform: rotate(120deg); } to { transform: rotate(160deg); } }
-
-    .dance .rig   { animation: groove 0.38s ease-in-out infinite alternate; }
-    .dance .arm-l { animation: pump 0.19s ease-in-out infinite alternate; }
-    .dance .arm-r { animation: pump 0.19s ease-in-out infinite alternate-reverse; }
-    .dance .head  { animation: nod 0.19s ease-in-out infinite alternate; }
-    .dance .leg-l { animation: step 0.38s ease-in-out infinite alternate; }
-    @keyframes groove { from { transform: rotate(-9deg) translateY(0); } to { transform: rotate(9deg) translateY(-5px); } }
-    @keyframes pump   { from { transform: rotate(150deg); } to { transform: rotate(-30deg); } }
-    @keyframes nod    { from { transform: rotate(6deg) translateY(0); } to { transform: rotate(-6deg) translateY(2px); } }
 
     @media (prefers-reduced-motion: reduce) {
-      .bot, .bot *, .w, .pool, .water::before { animation: none !important; transition: none !important; }
+      .w, .water::before { animation: none !important; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="wrap">
-      <a class="logo" href="/"><img src="favicon.svg" alt="">duesify</a>
-    </div>
-  </header>
+  <h1 aria-label="Coming soon">
+    <span class="line"><span class="w" style="--i:0" id="word">Coming</span></span>
+    <span class="line"><span class="w" style="--i:1">Soon</span><span class="pool" id="pool" aria-hidden="true"><span class="ladder"></span><span class="water"></span></span></span>
+  </h1>
 
-  <main>
-    <div class="wrap">
-      <h1 aria-label="Something great is coming soon">
-        <span class="line"><span class="w" style="--i:0" data-word>Something</span></span>
-        <span class="line"><span class="w hl" style="--i:1" data-word>great</span> <span class="w" style="--i:2" data-word>is</span></span>
-        <span class="line"><span class="w" style="--i:3" data-word>coming</span></span>
-        <span class="line"><span class="w" style="--i:4" data-word>soon.</span><span class="pool" id="pool" aria-hidden="true"><span class="ladder"></span><span class="water"></span></span></span>
-      </h1>
-    </div>
-  </main>
+  <canvas id="bot" role="img" aria-label="A cute robot playing on the page"></canvas>
 
-  <div class="bot" id="bot" role="img" aria-label="A small robot hopping across the words">
-    <div class="dir">
-      <div class="spin">
-        <svg viewBox="0 0 100 124" aria-hidden="true">
-          <g class="rig">
-            <g class="leg-l">
-              <rect x="37" y="94" width="10" height="18" rx="4" fill="#dfe6fb"/>
-              <ellipse cx="41" cy="115" rx="8" ry="5" fill="#22306a"/>
-            </g>
-            <g class="leg-r">
-              <rect x="53" y="94" width="10" height="18" rx="4" fill="#dfe6fb"/>
-              <ellipse cx="59" cy="115" rx="8" ry="5" fill="#22306a"/>
-            </g>
-            <g class="arm-l">
-              <circle cx="32" cy="74" r="6" fill="#22306a"/>
-              <ellipse cx="27" cy="85" rx="6.5" ry="10" fill="#e4eafb"/>
-            </g>
-            <g class="arm-r">
-              <circle cx="68" cy="74" r="6" fill="#22306a"/>
-              <ellipse cx="73" cy="85" rx="6.5" ry="10" fill="#e4eafb"/>
-            </g>
-            <rect x="31" y="67" width="38" height="33" rx="14" fill="#e4eafb"/>
-            <path d="M33 92 Q50 101 67 92 L67 96 Q50 104 33 96Z" fill="#c9d4f5"/>
-            <circle cx="50" cy="83" r="6.5" fill="#17204a"/>
-            <circle cx="50" cy="83" r="4" fill="#7de3f5"/>
-            <rect x="43" y="62" width="14" height="7" rx="2" fill="#22306a"/>
-            <g class="head">
-              <ellipse cx="14" cy="38" rx="8" ry="12" fill="#22306a"/>
-              <ellipse cx="11" cy="38" rx="3.5" ry="7.5" fill="none" stroke="#7de3f5" stroke-width="2.4"/>
-              <ellipse cx="86" cy="38" rx="8" ry="12" fill="#22306a"/>
-              <ellipse cx="89" cy="38" rx="3.5" ry="7.5" fill="none" stroke="#7de3f5" stroke-width="2.4"/>
-              <rect x="16" y="6" width="68" height="58" rx="27" fill="#e4eafb"/>
-              <path d="M18 52 Q50 70 82 52 L82 50 Q78 64 50 64 Q22 64 18 50Z" fill="#c9d4f5"/>
-              <path d="M33 9 Q50 3 67 9 Q61 18 50 18 Q39 18 33 9Z" fill="#3b5a9a"/>
-              <rect x="23" y="22" width="54" height="32" rx="15" fill="#17204a"/>
-              <ellipse cx="30" cy="29" rx="3" ry="5" fill="#fff" opacity="0.22" transform="rotate(30 30 29)"/>
-              <g class="eyes">
-                <circle class="eye" cx="39" cy="38" r="6" fill="#7de3f5"/>
-                <circle class="eye" cx="61" cy="38" r="6" fill="#7de3f5"/>
-                <g class="happy-eyes" fill="none" stroke="#7de3f5" stroke-width="3" stroke-linecap="round">
-                  <path d="M34 40 Q39 33 44 40"/>
-                  <path d="M56 40 Q61 33 66 40"/>
-                </g>
-                <path d="M45.5 46 Q50 50.5 54.5 46" fill="none" stroke="#7de3f5" stroke-width="2" stroke-linecap="round"/>
-              </g>
-              <g class="shades">
-                <rect x="28" y="32" width="20" height="12" rx="4" fill="#060b1f"/>
-                <rect x="52" y="32" width="20" height="12" rx="4" fill="#060b1f"/>
-                <rect x="46" y="35" width="8" height="3" fill="#060b1f"/>
-                <path d="M31 35 L37 35" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
-                <path d="M55 35 L61 35" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
-              </g>
-            </g>
-          </g>
-        </svg>
-      </div>
-    </div>
-  </div>
-
-  <script src="robot.js"></script>
+  <script src="robot-rig.js"></script>
+  <script src="scene.js"></script>
 </body>
 </html>

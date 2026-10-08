@@ -1,0 +1,37 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Robot preview</title>
+<style>body{margin:0;background:#fff;font:12px sans-serif}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script src="../robot-rig.js"></script>
+<script>
+// ?clip=Name&step=4&scale=0.6  (one row per clip, every `step` frames)
+const q = new URLSearchParams(location.search);
+const step = +(q.get('step') || 4), scale = +(q.get('scale') || 0.6);
+const names = q.get('clip') ? q.get('clip').split(',') : Object.keys(RobotRig.clips);
+const { CELL, clips, draw } = RobotRig;
+const cw = CELL.w * scale, ch = CELL.h * scale;
+const cols = Math.max(...names.map(n => Math.ceil(clips[n].frames / step)));
+const c = document.getElementById('c');
+c.width = cols * cw + 90; c.height = names.length * ch;
+const ctx = c.getContext('2d');
+names.forEach((n, r) => {
+  ctx.fillStyle = '#000'; ctx.fillText(n, 4, r * ch + 14);
+  for (let i = 0, f = 0; f < clips[n].frames; f += step, i++) {
+    const x = 90 + i * cw, y = r * ch;
+    ctx.fillStyle = (i % 2) ? '#eef1f8' : '#f7f8fc'; ctx.fillRect(x, y, cw, ch);
+    ctx.fillStyle = '#999'; ctx.fillText(f + 1, x + 3, y + 12);
+    draw(ctx, clips[n].pose(f), { x: x + CELL.groundX * scale, y: y + CELL.groundY * scale, scale });
+  }
+});
+</script></body></html>
+<script>
+// ?frame=Clip:index renders a single big frame with the ground line
+const fr = new URLSearchParams(location.search).get('frame');
+if (fr) {
+  const [n, i] = fr.split(':'); const sc = 1.5;
+  const c = document.getElementById('c'); c.width = CELL.w * sc; c.height = CELL.h * sc;
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#f4f6fb'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.strokeStyle = '#f66'; ctx.beginPath(); ctx.moveTo(0, CELL.groundY * sc); ctx.lineTo(c.width, CELL.groundY * sc); ctx.stroke();
+  RobotRig.draw(ctx, RobotRig.clips[n].pose(+i), { x: CELL.groundX * sc, y: CELL.groundY * sc, scale: sc });
+}
+</script>
