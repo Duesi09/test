@@ -12,6 +12,7 @@ Then it does the Wavy T emote on the spot, forever.
 
 - Click the robot during the story to make it Floss, Dab or dance. The final Wavy T never stops.
 - Hover it and it smiles at you.
+- Move the mouse around: the blueprint grid lights up under it and the stars drift a little. Now and then a shooting star flies by.
 - Add `?boards=4`, `?boards=5` or `?boards=6` to the URL to force a board count.
 - With "reduce motion" turned on, it just stands and breathes.
 

@@ -50,7 +50,43 @@
         linear-gradient(90deg, rgba(125, 170, 255, 0.035) 1px, transparent 1px) 0 0 / 14px 14px;
       background-position: center;
     }
-    .stars { -webkit-mask: none; mask: none; }
+    /* the grid lights up around the mouse, like a flashlight on a blueprint */
+    .grid.lit {
+      background:
+        linear-gradient(rgba(125, 227, 245, 0.42) 1px, transparent 1px) 0 0 / 56px 56px,
+        linear-gradient(90deg, rgba(125, 227, 245, 0.42) 1px, transparent 1px) 0 0 / 56px 56px,
+        linear-gradient(rgba(125, 227, 245, 0.18) 1px, transparent 1px) 0 0 / 14px 14px,
+        linear-gradient(90deg, rgba(125, 227, 245, 0.18) 1px, transparent 1px) 0 0 / 14px 14px;
+      background-position: center;
+      -webkit-mask: radial-gradient(240px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 70%);
+              mask: radial-gradient(240px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .grid.lit.on { opacity: 1; }
+    .stars {
+      -webkit-mask: none; mask: none;
+      inset: -20px;
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .shoot {
+      position: absolute;
+      width: 130px; height: 2px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, rgba(207, 224, 255, 0), rgba(207, 224, 255, 0.9));
+      transform-origin: 100% 50%;
+    }
+    .corner {
+      position: fixed;
+      width: 22px; height: 22px;
+      border: 0 solid rgba(125, 170, 255, 0.35);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .corner.tl { top: 18px; left: 18px; border-top-width: 1.5px; border-left-width: 1.5px; }
+    .corner.tr { top: 18px; right: 18px; border-top-width: 1.5px; border-right-width: 1.5px; }
+    .corner.bl { bottom: 18px; left: 18px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+    .corner.br { bottom: 18px; right: 18px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
     .star {
       position: absolute;
       width: 2px; height: 2px;
@@ -193,12 +229,16 @@
 
     @media (prefers-reduced-motion: reduce) {
       .w, .portal, .star { animation: none !important; }
+      .stars { transition: none; }
     }
   </style>
 </head>
 <body>
   <div class="deco grid" aria-hidden="true"></div>
+  <div class="deco grid lit" aria-hidden="true" id="lit"></div>
   <div class="deco stars" aria-hidden="true" id="stars"></div>
+  <div class="corner tl" aria-hidden="true"></div><div class="corner tr" aria-hidden="true"></div>
+  <div class="corner bl" aria-hidden="true"></div><div class="corner br" aria-hidden="true"></div>
   <div class="mark" aria-hidden="true">duesify<i>.</i></div>
   <h1 aria-label="Coming soon">
     <span class="line"><span class="w" style="--i:0" id="word">Coming</span></span>
@@ -223,6 +263,38 @@
         s.style.setProperty('--t', (-Math.random() * 6).toFixed(2) + 's');
         box.appendChild(s);
       }
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // mouse: light up the grid under the cursor, and drift the stars a touch for depth
+      const lit = document.getElementById('lit');
+      if (matchMedia('(pointer: fine)').matches) {
+        addEventListener('pointermove', e => {
+          lit.style.setProperty('--mx', e.clientX + 'px');
+          lit.style.setProperty('--my', e.clientY + 'px');
+          lit.classList.add('on');
+          const dx = e.clientX / innerWidth - 0.5, dy = e.clientY / innerHeight - 0.5;
+          box.style.transform = `translate(${(-dx * 14).toFixed(1)}px, ${(-dy * 10).toFixed(1)}px)`;
+        });
+        document.addEventListener('pointerleave', () => lit.classList.remove('on'));
+      }
+
+      // every so often a shooting star streaks across the top half
+      const shoot = () => {
+        const el = document.createElement('span');
+        el.className = 'shoot';
+        const x = innerWidth * (0.15 + Math.random() * 0.7), y = innerHeight * (0.05 + Math.random() * 0.3);
+        const ang = 20 + Math.random() * 20, dist = 260 + Math.random() * 200;
+        const rad = ang * Math.PI / 180;
+        el.style.left = x - 130 + 'px'; el.style.top = y + 'px';
+        box.appendChild(el);
+        el.animate([
+          { transform: `rotate(${ang}deg) translateX(0) scaleX(0.3)`, opacity: 0 },
+          { opacity: 1, offset: 0.2 },
+          { transform: `rotate(${ang}deg) translateX(${dist}px) scaleX(1)`, opacity: 0 },
+        ], { duration: 1100, easing: 'cubic-bezier(0.3, 0, 0.6, 1)' }).onfinish = () => el.remove();
+        setTimeout(shoot, 7000 + Math.random() * 8000);
+      };
+      setTimeout(shoot, 4000);
     })();
   </script>
   <script src="robot-rig.js"></script>
