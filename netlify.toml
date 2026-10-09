@@ -8,7 +8,7 @@
   status = 302
   force = false
 
-# www.duesify.com -> duesify.com is set under Domain management (primary domain).
+# www.duesify.ch -> duesify.ch is set under Domain management (primary domain).
 
 [[headers]]
   for = "/*"

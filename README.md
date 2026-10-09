@@ -1,4 +1,4 @@
-# duesify.com — Coming soon
+# duesify.ch — Coming soon
 
 A one-screen "COMING SOON" page with a little chibi robot that lives on the letters.
 
@@ -36,4 +36,4 @@ No build step. Open `index.html` in a browser to run it locally.
 1. Netlify → **Add new site → Import an existing project → GitHub** → pick this repo.
 2. **Branch to deploy:** `duesify`
 3. **Build command:** leave empty. **Publish directory:** `.`
-4. Deploy, then add `duesify.com` under **Domain management**.
+4. Deploy, then add `duesify.ch` under **Domain management**.
