@@ -26,12 +26,62 @@
       --cyan: #7de3f5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { background: var(--bg); }
-    body {
+    html {
       /* clean black-to-navy: a soft navy glow behind the words, fading to near-black */
       background:
         radial-gradient(ellipse 75% 60% at 50% 45%, #13285c 0%, #0b1838 38%, #060b1a 70%, #020308 100%) fixed,
         var(--bg);
+    }
+
+    /* Decoration: faint blueprint grid + twinkling stars, both fading out towards the edges */
+    .deco {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      -webkit-mask: radial-gradient(ellipse 70% 65% at 50% 47%, #000 20%, transparent 85%);
+              mask: radial-gradient(ellipse 70% 65% at 50% 47%, #000 20%, transparent 85%);
+    }
+    .grid {
+      background:
+        linear-gradient(rgba(125, 170, 255, 0.07) 1px, transparent 1px) 0 0 / 56px 56px,
+        linear-gradient(90deg, rgba(125, 170, 255, 0.07) 1px, transparent 1px) 0 0 / 56px 56px,
+        linear-gradient(rgba(125, 170, 255, 0.035) 1px, transparent 1px) 0 0 / 14px 14px,
+        linear-gradient(90deg, rgba(125, 170, 255, 0.035) 1px, transparent 1px) 0 0 / 14px 14px;
+      background-position: center;
+    }
+    .stars { -webkit-mask: none; mask: none; }
+    .star {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: #cfe0ff;
+      opacity: 0.15;
+      animation: twinkle var(--d) ease-in-out var(--t) infinite;
+    }
+    .star.big { width: 3px; height: 3px; box-shadow: 0 0 6px rgba(160, 200, 255, 0.8); }
+    @keyframes twinkle { 50% { opacity: 0.85; } }
+
+    .mark, .foot {
+      position: fixed;
+      left: 0; right: 0;
+      text-align: center;
+      color: rgba(234, 240, 255, 0.45);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .mark {
+      top: 22px;
+      font-size: 15px;
+      letter-spacing: 0.32em;
+      text-transform: lowercase;
+      color: rgba(234, 240, 255, 0.7);
+    }
+    .mark i { color: var(--cyan); font-style: normal; }
+    .foot {
+      bottom: 18px;
+      font: 600 12px/1 system-ui, sans-serif;
+      letter-spacing: 0.08em;
     }
     body {
       min-height: 100vh;
@@ -52,6 +102,7 @@
       letter-spacing: -0.035em;
       text-transform: uppercase;
       text-align: center;
+      text-shadow: 0 0 40px rgba(110, 160, 255, 0.28), 0 2px 0 rgba(4, 8, 20, 0.35);
       padding: 1.1em 16px 0.6em;    /* room above for the robot's jumps */
     }
     .line { display: block; white-space: nowrap; }
@@ -141,11 +192,14 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .w, .portal { animation: none !important; }
+      .w, .portal, .star { animation: none !important; }
     }
   </style>
 </head>
 <body>
+  <div class="deco grid" aria-hidden="true"></div>
+  <div class="deco stars" aria-hidden="true" id="stars"></div>
+  <div class="mark" aria-hidden="true">duesify<i>.</i></div>
   <h1 aria-label="Coming soon">
     <span class="line"><span class="w" style="--i:0" id="word">Coming</span></span>
     <span class="line"><span class="w" style="--i:1" id="soon">Soon</span></span>
@@ -153,6 +207,24 @@
 
   <canvas id="bot" role="img" aria-label="A cute robot playing on the page"></canvas>
 
+  <footer class="foot">© 2026 Duesify</footer>
+
+  <script>
+    // sprinkle a few dozen stars at random spots, each twinkling at its own pace
+    (() => {
+      const box = document.getElementById('stars');
+      const n = Math.round(Math.min(70, innerWidth * innerHeight / 18000));
+      for (let i = 0; i < n; i++) {
+        const s = document.createElement('span');
+        s.className = Math.random() < 0.15 ? 'star big' : 'star';
+        s.style.left = (Math.random() * 100).toFixed(2) + '%';
+        s.style.top = (Math.random() * 100).toFixed(2) + '%';
+        s.style.setProperty('--d', (2.5 + Math.random() * 4).toFixed(2) + 's');
+        s.style.setProperty('--t', (-Math.random() * 6).toFixed(2) + 's');
+        box.appendChild(s);
+      }
+    })();
+  </script>
   <script src="robot-rig.js"></script>
   <script src="scene.js"></script>
 </body>
