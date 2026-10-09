@@ -26,11 +26,16 @@
       --cyan: #7de3f5;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html {
-      /* clean black-to-navy: a soft navy glow behind the words, fading to near-black */
-      background:
-        radial-gradient(ellipse 75% 60% at 50% 45%, #13285c 0%, #0b1838 38%, #060b1a 70%, #020308 100%) fixed,
-        var(--bg);
+    html, body { background-color: var(--bg); color-scheme: dark; }
+    body { position: relative; isolation: isolate; }   /* keeps the sky + grid layers above any body background */
+    /* clean black-to-navy: a soft navy glow behind the words, fading to near-black.
+       Its own fixed layer, so the page stays dark even if a host styles html/body. */
+    .sky {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background: radial-gradient(ellipse 75% 60% at 50% 45%, #13285c 0%, #0b1838 38%, #060b1a 70%, #020308 100%);
     }
 
     /* Decoration: faint blueprint grid + twinkling stars, both fading out towards the edges */
@@ -234,6 +239,7 @@
   </style>
 </head>
 <body>
+  <div class="sky" aria-hidden="true"></div>
   <div class="deco grid" aria-hidden="true"></div>
   <div class="deco grid lit" aria-hidden="true" id="lit"></div>
   <div class="deco stars" aria-hidden="true" id="stars"></div>
