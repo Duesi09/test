@@ -112,11 +112,12 @@
       z-index: 1;
     }
     .mark {
-      top: 22px;
-      font-size: 15px;
-      letter-spacing: 0.32em;
+      top: 20px;
+      font-size: clamp(20px, 2.2vw, 28px);
+      letter-spacing: 0.28em;
       text-transform: lowercase;
-      color: rgba(234, 240, 255, 0.7);
+      color: rgba(234, 240, 255, 0.92);
+      text-shadow: 0 0 18px rgba(110, 160, 255, 0.45);
     }
     .mark i { color: var(--cyan); font-style: normal; }
     .foot {
@@ -137,7 +138,7 @@
     }
 
     h1 {
-      font-size: min(18vw, 21.5vh);
+      font-size: min(16vw, 19vh);
       font-weight: 800;
       line-height: 1.04;
       letter-spacing: -0.035em;

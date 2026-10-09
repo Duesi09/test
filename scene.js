@@ -677,7 +677,7 @@
       range.setStart(node, i);
       range.setEnd(node, i + 1);
       const r = range.getBoundingClientRect();
-      if (r.width > 0) out.push({ l: r.left, r: r.right, cx: (r.left + r.right) / 2 });
+      if (r.width > 0) out.push({ i, l: r.left, r: r.right, cx: (r.left + r.right) / 2 });
     }
     return out;
   }
@@ -693,6 +693,8 @@
       const line = top ? c : o;
       const h = line.base - line.top;
       const plank = { x: L.cx + rand(-0.05, 0.05) * h, y: line.top + rand(0.45, 0.55) * h, w: rand(1.1, 1.22) * h, rot };
+      // remember where the board sits relative to its letter, so it follows the letter on resize
+      plank.anchor = { el: top ? word : soon, i: L.i, fx: (plank.x - L.cx) / h, fy: (plank.y - line.top) / h, fw: plank.w / h };
       let side, x;
       if (top) {
         side = L.cx < (c.l + c.r) / 2 ? 1 : -1;                  // stand on top, on the side towards the middle
@@ -784,16 +786,28 @@
     if (el) el.animate([{ filter: 'brightness(1)', scale: '1' }, { filter: 'brightness(2.2)', scale: '1.25' }, { filter: 'brightness(1)', scale: '1' }], { duration: 260, easing: 'ease-out' });
   }
 
+  // Put a board on its letter, using the letter's current position and size.
+  function placeBoard(b) {
+    const a = b.anchor;
+    const L = letterBoxes(a.el).find(q => q.i === a.i);
+    if (!L) return;
+    const line = lineOf(a.el), lh = line.base - line.top;
+    const w = a.fw * lh, h = Math.max(8, w * 0.17);
+    const cx = L.cx + a.fx * lh, cy = line.top + a.fy * lh;
+    b.style.width = `${w}px`;
+    b.style.height = `${h}px`;
+    b.style.left = `${cx - w / 2}px`;
+    b.style.top = `${cy - h / 2}px`;
+    return { x: cx, y: cy };
+  }
+
   function nailBoard(pl) {
     const b = document.createElement('div');
     b.className = 'plank';
-    const h = Math.max(8, pl.w * 0.17);
-    b.style.width = `${pl.w}px`;
-    b.style.height = `${h}px`;
-    b.style.left = `${pl.x - pl.w / 2}px`;
-    b.style.top = `${pl.y - h / 2}px`;
+    b.anchor = pl.anchor;
     b.style.setProperty('--rot', `${pl.rot}deg`);
     document.body.appendChild(b);
+    Object.assign(pl, placeBoard(b));
     boards.push(b);
     // the board starts held up over its head, then gets slapped onto the letter
     const hx = x - pl.x, hy = ground - 150 * scale - pl.y;
@@ -1005,6 +1019,7 @@
     lastBox = after;
     const sx = (after.r - after.l) / Math.max(1, before.r - before.l);
     const sy = (after.base - after.top) / Math.max(1, before.base - before.top);
+    boards.forEach(placeBoard);                 // boards stay pinned to their letters
     x = after.l + (x - before.l) * sx;
     ground = after.top + (ground - before.top) * sy;
     if (!override && !clipRect && !portal && !spinRot) {
