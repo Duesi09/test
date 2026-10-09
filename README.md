@@ -26,10 +26,17 @@ Then it does the Wavy T emote on the spot, forever.
 | `favicon.png` | Tab icon (rendered from the rig). |
 | `og-image.jpg` | Preview image for link shares (WhatsApp, Discord, X, ...). |
 | `netlify.toml` | Netlify settings: publish folder, redirects, security headers. |
+| `_headers` | Same security headers for Cloudflare Pages. |
 | `robot/` | GIFs, sprite sheets and a Unity importer for all animations (see `robot/README.md`). |
 | `tools/` | Preview page and scripts that export the sprite sheets and GIFs. |
 
 No build step. Open `index.html` in a browser to run it locally.
+
+## Deploy on Cloudflare Pages (no badge)
+
+1. Cloudflare → **Workers & Pages → Create → Pages → Connect to Git** → pick this repo.
+2. **Production branch:** `duesify`. **Framework preset:** None. **Build command:** empty. **Build output directory:** `/`
+3. Deploy, then **Custom domains → Set up a custom domain** → `duesify.ch` (and `www.duesify.ch`).
 
 ## Deploy on Netlify
 
