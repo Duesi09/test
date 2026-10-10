@@ -15,11 +15,23 @@
   const GRAVITY = 2600;              // rig units / s^2 (the robot is ~180 units tall)
   const JUMP_G = 1500;               // gentler gravity for jumps and dives
 
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  // Story clock: stands still while the tab is in the background, so the robot never
+  // skips ahead or ends up halfway through a jump when you come back.
+  let pausedTotal = 0, hiddenAt = document.hidden ? performance.now() : null;
+  const clock = () => (hiddenAt ?? performance.now()) - pausedTotal;
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) hiddenAt = performance.now();
+    else if (hiddenAt !== null) { pausedTotal += performance.now() - hiddenAt; hiddenAt = null; }
+  });
+  const sleep = ms => new Promise(r => {
+    const end = clock() + ms;
+    const tick = () => { const left = end - clock(); if (left <= 0) r(); else setTimeout(tick, Math.min(left, 100)); };
+    tick();
+  });
   const rand = (a, b) => a + Math.random() * (b - a);
   const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
   const ease = t => t * t * (3 - 2 * t);
-  const frame = () => new Promise(requestAnimationFrame);
+  const frame = () => new Promise(r => requestAnimationFrame(() => r(clock())));
   const measure = document.createElement('canvas').getContext('2d');
 
   // ---------- State ----------
@@ -47,22 +59,22 @@
 
   function play(name, opts = {}) {
     blendFrom = normalize(lastPose);
-    blendStart = performance.now();
+    blendStart = clock();
     clip = clips[name];
-    clipStart = performance.now();
+    clipStart = clock();
     rate = (opts.rate || 1) * SPEED;
     override = opts.mod || null;
   }
   const duration = (name, r = 1) => clips[name].frames / clips[name].fps / (r * SPEED) * 1000;
 
   function say(type, delay = 0, dur = 1100) {
-    emotes.push({ type, start: performance.now() + delay, dur });
+    emotes.push({ type, start: clock() + delay, dur });
   }
 
   function face(left) {
     if (left === flip) return;
     flip = left;
-    turnStart = performance.now();
+    turnStart = clock();
   }
 
   // ---------- Layout ----------
@@ -85,13 +97,15 @@
   function spots() {
     const c = lineOf(word), s = lineOf(soon);
     const pad = 34 * scale;
+    const edge = Math.max(c.r, s.r);
+    // Hidden pool: clear of every letter, level with the bottom line. Always the same spot.
+    const poolX = Math.max(Math.min(edge + 95 * scale, vw - 48), edge + 30 * scale);
     return {
       top: { l: c.l + pad, r: c.r - pad, y: c.top, home: (c.l + c.r) / 2 },
-      edge: Math.max(c.r, s.r),
-      // Hidden pool: clear of every letter, level with the bottom line.
-      pool: { x: Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 48), y: s.base },
-      // Standing spot at the bottom, just right of the N in SOON.
-      bottom: { x: Math.min(s.r + 115 * scale, Math.min(Math.max(c.r, s.r) + 95 * scale, vw - 48) - 40 * scale), y: s.base },
+      edge,
+      pool: { x: poolX, y: s.base },
+      // Standing spot at the bottom, just right of the N in SOON (between the N and the pool).
+      bottom: { x: clamp(s.r + 115 * scale, s.r + 30 * scale, Math.max(s.r + 30 * scale, poolX - 40 * scale)), y: s.base },
       n: { x: s.r - 0.12 * (s.base - s.top), top: s.top, base: s.base },
       coming: c, soon: s,
     };
@@ -248,7 +262,7 @@
       ctx.scale(shrink, shrink);
       ctx.translate(0, CENTER * scale);
     }
-    const tt = (performance.now() - turnStart) / TURN_MS;
+    const tt = (clock() - turnStart) / TURN_MS;
     let shownFlip = flip;
     if (tt < 1) {
       if (tt < 0.5) shownFlip = !flip;
@@ -258,7 +272,8 @@
     ctx.restore();
   }
 
-  function render(now) {
+  function render() {
+    const now = clock();
     const pose = currentPose(now);
     ctx.clearRect(0, 0, vw, vh);
     if (portal) {
@@ -315,8 +330,8 @@
   }
 
   async function wait(ms) {
-    const end = performance.now() + ms / SPEED;
-    while (performance.now() < end) {
+    const end = clock() + ms / SPEED;
+    while (clock() < end) {
       if (await maybeDance()) return;
       await sleep(60);
     }
@@ -340,9 +355,9 @@
     restart();
     const vmax = (run ? 76 : 14) * clipRate * SPEED * scale * speedMul;
     const accel = vmax / 0.22;
-    let v = 0, last = performance.now();
+    let v = 0, last = clock();
     while (Math.abs(tx - x) > 0.5) {
-      if (await maybeDance()) { restart(); last = performance.now(); v = 0; }
+      if (await maybeDance()) { restart(); last = clock(); v = 0; }
       const now = await frame();
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
@@ -374,6 +389,9 @@
       },
     });
     await sleep(duration(name, r));
+    const end = path(1);                     // land exactly on the target, even if a frame was skipped
+    x = end.x; ground = end.y;
+    if (onT) onT(1);
     override = null;
   }
 
@@ -425,8 +443,8 @@
   }
 
   async function bubbles(px, py, ms) {
-    const end = performance.now() + ms;
-    while (performance.now() < end) {
+    const end = clock() + ms;
+    while (clock() < end) {
       splash(px + rand(-20, 20) * scale, py, 3, 0.35);
       await sleep(rand(250, 500));
     }
@@ -526,13 +544,16 @@
     const pool = s.pool, x0 = x, y0 = ground;
     const gj = JUMP_G * scale;
     const bottomY = pool.y + 175 * scale;
-    const apexX = Math.max(x0 + 40 * scale, s.edge + 60 * scale);
-    let H = 70 * scale, vx, entryX;
+    // Always dive into the same spot (the pool). Raise the jump only until the robot is past the
+    // last letter by the time it drops back to letter height, so it never touches one.
+    const entryX = pool.x;
+    const Hmax = Math.max(70 * scale, y0 - 200 * scale);          // keep the whole robot on screen
+    let H = 60 * scale, vx;
     for (;;) {
-      vx = (apexX - x0) / Math.sqrt(2 * H / gj);
-      entryX = apexX + vx * Math.sqrt(2 * (H + pool.y - y0) / gj);
-      if (entryX < vw - 48 || H > 340 * scale) break;
-      H += 10 * scale;                                   // narrow screens: jump higher, travel less
+      const ta = Math.sqrt(2 * H / gj), tb = Math.sqrt(2 * (H + pool.y - y0) / gj);
+      vx = (entryX - x0) / (ta + tb);
+      if (x0 + 2 * vx * ta > s.edge + 28 * scale || H >= Hmax) break;
+      H = Math.min(Hmax, H + 8 * scale);
     }
     const vy = Math.sqrt(2 * gj * H);
     const Tdive = (vy + Math.sqrt(vy * vy + 2 * gj * (bottomY - y0))) / gj;
@@ -617,7 +638,7 @@
     say('sweat', 900, 1000);
     leanTarget = 0;
     const g = GRAVITY * scale;
-    let v = 14 * 2 * SPEED * scale, last = performance.now();
+    let v = 14 * 2 * SPEED * scale, last = clock();
     while (x > A.x - 75 * scale) {
       const now = await frame();
       const dt = Math.min(0.1, (now - last) / 1000);
@@ -641,9 +662,9 @@
     const gf = g * 0.42;                                   // floatier, cartoon fall
     v = Math.min(v, 160 * scale);
     const T = (-v + Math.sqrt(v * v + 2 * gf * (end.y - y1))) / gf;  // time to reach the letters
-    const t0 = performance.now();
+    const t0 = clock();
     for (;;) {
-      const t = Math.min(T, (performance.now() - t0) / 1000);
+      const t = Math.min(T, (clock() - t0) / 1000);
       const k = t / T;
       x = x1 + (end.x - x1) * ease(k);
       ground = y1 + v * t + 0.5 * gf * t * t;
@@ -752,9 +773,9 @@
   }
 
   async function teleportOut() {
-    const t0 = performance.now();
+    const t0 = clock();
     for (;;) {
-      const t = Math.min(1, (performance.now() - t0) / 150);
+      const t = Math.min(1, (clock() - t0) / 150);
       shrink = 1 - t;
       if (t >= 1) break;
       await frame();
@@ -762,9 +783,9 @@
   }
 
   async function teleportIn() {
-    const t0 = performance.now();
+    const t0 = clock();
     for (;;) {
-      const t = Math.min(1, (performance.now() - t0) / 170);
+      const t = Math.min(1, (clock() - t0) / 170);
       shrink = t < 0.7 ? t / 0.7 * 1.12 : 1.12 - 0.12 * (t - 0.7) / 0.3;
       if (t >= 1) break;
       await frame();
@@ -855,9 +876,9 @@
 
     // Hard hat drops on with a bounce
     hatOn = 1;
-    const h0 = performance.now();
+    const h0 = clock();
     for (;;) {
-      const t = Math.min(1, (performance.now() - h0) / 420);
+      const t = Math.min(1, (clock() - h0) / 420);
       hatDrop = t < 0.6 ? 150 * (1 - t / 0.6) * (1 - t / 0.6) : -6 * Math.sin(Math.PI * (t - 0.6) / 0.4);
       if (t >= 1) break;
       await frame();
@@ -977,10 +998,10 @@
     const g = GRAVITY * scale * 0.6, y0 = ground;
     const T = Math.sqrt(2 * (landY - y0) / g);
     play('Jump', { mod: (pose, f) => (f < 40 ? Object.assign({}, pose, { y: 0 }) : pose) });
-    clipStart = performance.now() - (34 / (16 * SPEED)) * 1000 + T * 1000 - (6 / (16 * SPEED)) * 1000;
-    const t0 = performance.now();
+    clipStart = clock() - (34 / (16 * SPEED)) * 1000 + T * 1000 - (6 / (16 * SPEED)) * 1000;
+    const t0 = clock();
     for (;;) {
-      const t = Math.min(T, (performance.now() - t0) / 1000);
+      const t = Math.min(T, (clock() - t0) / 1000);
       ground = y0 + 0.5 * g * t * t;
       if (t >= T) break;
       await frame();
@@ -1000,10 +1021,11 @@
     play('WavyT');
   }
 
+  if (new URLSearchParams(location.search).has('debug')) window.__bot = () => ({ x, ground, spots: spots() });
   addEventListener('click', e => { if (hit(e.clientX, e.clientY)) clicked = true; });
   addEventListener('pointermove', e => {
     document.body.style.cursor = hit(e.clientX, e.clientY) ? 'pointer' : '';
-    eyes.mx = e.clientX; eyes.my = e.clientY; eyes.mt = performance.now();
+    eyes.mx = e.clientX; eyes.my = e.clientY; eyes.mt = clock();
   });
   // Keep the robot glued to the same spot on the letters when the window changes size:
   // map its position from the old text box to the new one.
